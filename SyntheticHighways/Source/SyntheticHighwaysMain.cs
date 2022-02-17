@@ -124,7 +124,7 @@ namespace SyntheticHighways
         {
             /*modRunning = true;*/
 
-            // Wait before recording data
+            // Wait before starting the mod
             yield return new WaitForSecondsRealtime(modStartDelay);
 
             // Export the map to XML for Python change suggestor (saved to temporary file)
@@ -132,6 +132,9 @@ namespace SyntheticHighways
 
             // Make initial changes (remove some roads)
             string temp_fname = mapChanger.MakeInitialChanges(mapDoc);
+
+            // Wait for changes to take effect.
+            yield return new WaitForSecondsRealtime(10);
 
             // Export the map to XML for first snapshot
             mapExporter.ExportMap(1, true);
@@ -144,6 +147,9 @@ namespace SyntheticHighways
             // * Add lanes
             // * Change road type
             // * Change road directionality
+
+            // Wait for changes to take effect.
+            yield return new WaitForSecondsRealtime(10);
 
             // Export map for second snapshot
             mapExporter.ExportMap(2, true);
