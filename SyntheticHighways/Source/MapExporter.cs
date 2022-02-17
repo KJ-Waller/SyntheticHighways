@@ -71,7 +71,7 @@ namespace SyntheticHighways.MapExporter
                 {
                     // Initialize node
                     XmlElement node = mapDoc.CreateElement("Node");
-
+                    
                     // Add ID attribute
                     XmlAttribute Id = mapDoc.CreateAttribute("Id");
                     Id.Value = key.ToString();
@@ -135,14 +135,32 @@ namespace SyntheticHighways.MapExporter
                 if (EnumExtensions.IsFlagSet<NetSegment.Flags>((NetSegment.Flags)netSegment.m_flags, (NetSegment.Flags)1))
                 {
                     // Create segment element, adding 2 children: the starting node location, and end node location
-                    // First create the segment element, assigning it a unique ID
+                    // First create the segment element, assigning it a unique ID, adding a prefabid and number of lanes
                     XmlElement segment = mapDoc.CreateElement("Segment");
                     XmlAttribute segmentId = mapDoc.CreateAttribute("SegmentId");
                     segmentId.Value = key.ToString();
                     segment.Attributes.Append(segmentId);
+
                     XmlAttribute prefabId = mapDoc.CreateAttribute("PrefabId");
                     prefabId.Value = netSegment.Info.m_prefabDataIndex.ToString();
                     segment.Attributes.Append(prefabId);
+
+                    NetInfo ni = PrefabCollection<NetInfo>.GetPrefab((uint)netSegment.Info.m_prefabDataIndex);
+                    XmlAttribute prefabNameAttrib = mapDoc.CreateAttribute("PrefabName");
+                    prefabNameAttrib.Value = ni.name;
+                    segment.Attributes.Append(prefabNameAttrib);
+
+                    int forwardLanes = 0;
+                    int backwardLanes = 0;
+                    netSegment.CountLanes((ushort) key, NetInfo.LaneType.Vehicle, VehicleInfo.VehicleType.Car, ref forwardLanes, ref backwardLanes);
+
+                    XmlAttribute fLanes = mapDoc.CreateAttribute("FowardLanes");
+                    fLanes.Value = forwardLanes.ToString();
+                    segment.Attributes.Append(fLanes);
+
+                    XmlAttribute bLanes = mapDoc.CreateAttribute("BackwardLanes");
+                    bLanes.Value = backwardLanes.ToString();
+                    segment.Attributes.Append(bLanes);
 
                     XmlElement startNode = this.nodeDictionary.ContainsKey(netSegment.m_startNode) ? this.nodeDictionary[netSegment.m_startNode] : (XmlElement)null;
                     XmlElement endNode = this.nodeDictionary.ContainsKey(netSegment.m_endNode) ? this.nodeDictionary[netSegment.m_endNode] : (XmlElement)null;

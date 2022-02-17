@@ -29,20 +29,40 @@ namespace SyntheticHighways.MapChanger
             string changePath = Path.Combine(currDir, xml_fname);
             doc.Load(changePath);
 
-            // For each segment in XML file, add the road back into the map
+            // Make snapshot changes (changes to be made in between snapshots)
+            // Remove the roads from the map for initial changes
             XmlElement root = doc.DocumentElement;
-            XmlNodeList nodes = root.SelectNodes("/root/RemoveRoads/RemoveRoad");
-            foreach (XmlNode node in nodes)
+            XmlNodeList removeRoads = root.SelectNodes("/root/SnapshotChanges/RemoveRoad");
+            foreach (XmlNode node in removeRoads)
+            {
+                RemoveRoad(Convert.ToUInt16(node.Attributes.GetNamedItem("SegmentId").Value));
+            }
+
+            // Add the roads from the map for initial changes
+            XmlNodeList addRoads = root.SelectNodes("/root/SnapshotChanges/AddRoad");
+            foreach (XmlNode node in addRoads)
             {
                 ushort startNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("StartNodeId").Value);
                 ushort endNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("EndNodeId").Value);
                 uint prefabId = Convert.ToUInt16(node.Attributes.GetNamedItem("PrefabId").Value);
                 AddRoad(startNodeId, endNodeId, prefabId);
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Roads added back");
 
-            // Delete the XML file containing the roads that were removed
-            try
+            // Make prefab changes in the map for initial changes
+            XmlNodeList prefabChanges = root.SelectNodes("/root/SnapshotChanges/PrefabChange");
+            foreach (XmlNode node in prefabChanges)
+            {
+                ushort segmentId = Convert.ToUInt16(node.Attributes.GetNamedItem("SegmentId").Value);
+                ushort startNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("StartNodeId").Value);
+                ushort endNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("EndNodeId").Value);
+                uint prefabId = Convert.ToUInt16(node.Attributes.GetNamedItem("NewPrefabId").Value);
+                PrefabChange(segmentId, startNodeId, endNodeId, prefabId);
+            }
+
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Snapshot changes have been made");
+
+            // Delete the XML file containing the changes to be made
+            /*try
             {
                 if (File.Exists(changePath))
                 {
@@ -56,7 +76,7 @@ namespace SyntheticHighways.MapChanger
             } catch (IOException ioExp)
             {
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, ioExp.Message);
-            }
+            }*/
         }
 
         public string MakeInitialChanges(XmlDocument mapDoc)
@@ -120,14 +140,36 @@ namespace SyntheticHighways.MapChanger
             string changePath = Path.Combine(currDir, results);
             doc.Load(changePath);
 
-            // Remove the roads from the map
+            // Remove the roads from the map for initial changes
             XmlElement root = doc.DocumentElement;
-            XmlNodeList nodes = root.SelectNodes("/root/RemoveRoads/RemoveRoad");
-            foreach (XmlNode node in nodes)
+            XmlNodeList removeRoads = root.SelectNodes("/root/InitialChanges/RemoveRoad");
+            foreach (XmlNode node in removeRoads)
             {
                 RemoveRoad(Convert.ToUInt16(node.Attributes.GetNamedItem("SegmentId").Value));
             }
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Roads removed");
+
+            // Add the roads from the map for initial changes
+            XmlNodeList addRoads = root.SelectNodes("/root/InitialChanges/AddRoad");
+            foreach (XmlNode node in addRoads)
+            {
+                ushort startNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("StartNodeId").Value);
+                ushort endNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("EndNodeId").Value);
+                uint prefabId = Convert.ToUInt16(node.Attributes.GetNamedItem("PrefabId").Value);
+                AddRoad(startNodeId, endNodeId, prefabId);
+            }
+
+            // Make prefab changes in the map for initial changes
+            XmlNodeList prefabChanges = root.SelectNodes("/root/InitialChanges/PrefabChange");
+            foreach (XmlNode node in prefabChanges)
+            {
+                ushort segmentId = Convert.ToUInt16(node.Attributes.GetNamedItem("SegmentId").Value);
+                ushort startNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("StartNodeId").Value);
+                ushort endNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("EndNodeId").Value);
+                uint prefabId = Convert.ToUInt16(node.Attributes.GetNamedItem("NewPrefabId").Value);
+                PrefabChange(segmentId, startNodeId, endNodeId, prefabId);
+            }
+
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Initial changes have been made");
 
             return changePath;
         }
@@ -153,6 +195,12 @@ namespace SyntheticHighways.MapChanger
             vec = VectorUtils.NormalizeXZ(vec);
             nManager.CreateSegment(out segmentId, ref rand, ni, startNodeId, endNodeId, vec, -vec, Singleton<SimulationManager>.instance.m_currentBuildIndex, Singleton<SimulationManager>.instance.m_currentBuildIndex, false);
             Singleton<SimulationManager>.instance.m_currentBuildIndex += 2u;
+        }
+
+        void PrefabChange(ushort segmentId, ushort startNodeId, ushort endNodeId, uint prefabId)
+        {
+            RemoveRoad(segmentId);
+            AddRoad(startNodeId, endNodeId, prefabId);
         }
     }
 }
