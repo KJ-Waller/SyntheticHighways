@@ -1,30 +1,15 @@
 import sys
 import xml.etree.ElementTree as ET
 import clingo
-
-PREFAB_DICT = {
-    35: {
-        'name': 'Basic Road',
-        'lanes': 1,
-    },
-    37: {
-        'name': 'Large Road',
-        'lanes': 3,
-    },
-    38: {
-        'name': 'Gravel Road',
-        'lanes': 1
-    },
-    40: {
-        'name': 'Medium Road',
-        'lanes': 2,
-    },
-}
+import os
+import random
 
 class MapChanger(object):
-    def __init__(self, xml_fname):
+    def __init__(self, xml_fname, prefabchange_samplerate=0.05):
         self.xml_fname = xml_fname
         self.remove_roads = False
+        self.prefabchange_samplerate = prefabchange_samplerate
+
 
     def suggest_changes(self):
         self.parse_xml()
@@ -37,7 +22,10 @@ class MapChanger(object):
         self.to_xml(changes)
         ET.indent(self.xml_tree, space="\t", level=0)
         map_name = self.xml_fname[self.xml_fname.find('/')+1:self.xml_fname.rfind('_temp')]
-        changes_fname = f"./SyntheticHighways/{map_name}_changes.xml"
+        folder = 'SyntheticHighways'
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        changes_fname = os.path.join(folder, f"{map_name}_changes.xml")
         self.xml_tree.write(changes_fname, encoding="UTF-8", xml_declaration=True)
         print(changes_fname, end = '')
     
@@ -64,8 +52,9 @@ class MapChanger(object):
             remove_road.set('StartNodeId', str(removed_road[1]))
             remove_road.set('EndNodeId', str(removed_road[2]))
             remove_road.set('PrefabId', str(removed_road[3]))
-
-        for road_change in initial_changes['prefab_changes']:
+        
+        sampled_prefab_changes = random.sample(initial_changes['prefab_changes'], int(len(initial_changes['prefab_changes'])*self.prefabchange_samplerate))
+        for road_change in sampled_prefab_changes:
             road_chng = ET.SubElement(init_changes, 'PrefabChange')
             road_chng.set('SegmentId', str(road_change[0]))
             road_chng.set('StartNodeId', str(road_change[1]))
@@ -91,8 +80,9 @@ class MapChanger(object):
             remove_road.set('StartNodeId', str(removed_road[1]))
             remove_road.set('EndNodeId', str(removed_road[2]))
             remove_road.set('PrefabId', str(removed_road[3]))
-
-        for road_change in snapshot_changes['prefab_changes']:
+            
+        sampled_prefab_changes = random.sample(snapshot_changes['prefab_changes'], int(len(snapshot_changes['prefab_changes'])*self.prefabchange_samplerate))
+        for road_change in sampled_prefab_changes:
             road_chng = ET.SubElement(snpsht_changes, 'PrefabChange')
             road_chng.set('SegmentId', str(road_change[0]))
             road_chng.set('StartNodeId', str(road_change[1]))
@@ -117,13 +107,20 @@ class MapChanger(object):
                 node_ids.append(int(node.attrib['Id']))
 
         self.segments = []
+        self.prefabs = {}
         for segment in segments:
-            if int(segment.attrib['PrefabId']) not in PREFAB_DICT.keys():
-                continue
+            prefab_name = segment.attrib['PrefabName']
+            prefab_id = int(segment.attrib['PrefabId'])
             start_nodeid = int(segment[0].attrib['NodeId'])
             end_nodeid = int(segment[1].attrib['NodeId'])
             if start_nodeid in node_ids and end_nodeid in node_ids:
                 self.segments.append(segment)
+                if prefab_id not in self.prefabs.keys():
+                    self.prefabs[prefab_id] = {
+                        'name': prefab_name,
+                        'forward_lanes': int(segment.attrib['ForwardLanes']),
+                        'backward_lanes': int(segment.attrib['BackwardLanes']),
+                    }
 
 
     def generate_asp_prog_v1(self):
@@ -169,15 +166,12 @@ class MapChanger(object):
         return asp_program
 
         
-    def generate_asp_prog_v2(self, prefab_change_fraction=0.1):
+    def generate_asp_prog_v2(self):
         asp_program = ""
-        
-        num_prefab_changes = int(len(self.segments) * prefab_change_fraction)
-        asp_program += f"#const n={num_prefab_changes}.\n"
 
-        prefab_ids = PREFAB_DICT.keys()
+        prefab_ids = self.prefabs.keys()
         for pid in prefab_ids:
-            asp_program += f"pid({pid})."
+            asp_program += f"pid({pid}).\n"
 
         for i, node in enumerate(self.nodes):
             asp_program += f"""node({node.attrib['Id']}).\n"""
@@ -188,13 +182,14 @@ class MapChanger(object):
 
         
         asp_program += f"""
+
         % Every edge can be a new edge
         {{ new_edge(EN,N1,N2) }} 1 :- edge(EN,N1,N2).
 
         % Maximize the number of roads to be removed
-        numedge_old(OC) :- OC = #count {{ EN,edge(EN,N1,N2) : edge(EN,N1,N2) }}.
-        numedge_new(NC) :- NC = #count {{ EN,new_edge(EN,N1,N2) : new_edge(EN,N1,N2) }}.
-        #maximize {{ DIFF : numedge_old(OC), numedge_new(NC), DIFF = OC - NC}}.
+        %numedge_old(OC) :- OC = #count {{ EN,edge(EN,N1,N2) : edge(EN,N1,N2) }}.
+        %numedge_new(NC) :- NC = #count {{ EN,new_edge(EN,N1,N2) : new_edge(EN,N1,N2) }}.
+        % # maximize {{ DIFF : numedge_old(OC), numedge_new(NC), DIFF = OC - NC}}.
 
         % Define reachability over old network
         reachable(N1,N1) :- node(N1).
@@ -206,27 +201,24 @@ class MapChanger(object):
         new_reachable(N1,N2) :- node(N1), node(N2), new_edge(_,N1,N2).
         new_reachable(N1,N3) :- node(N1), node(N2), node(N3), N1!=N2, N2!=N3, new_reachable(N1,N2), new_reachable(N2,N3).
 
-        % Define node degrees
-        %degree(N1,D) :- node(N1), D = OD + ID,
-        %  OD = #count {{ EN : node(N1), edge(EN,N1,N2) }}, 
-        %  ID = #count {{ EN : node(N1), edge(EN,N2,N1) }}.
-        % degree(N1,D) :- node(N1), D = #count {{ EN : node(N1), edge(EN,N2,N1) }}.
-
+        % CONSTRAINT: Every node must remain reachable after changes
         :- reachable(N1,N2), not new_reachable(N1,N2).
         %:- reachable(N1,N2), not new_reachable(N1,N2), degree(N1,D1), degree(N2,D2), D1 > 2, D2 > 2.
 
-        added_edge(EN,N1,N2) :- edge(EN,N1,N2), not new_edge(EN,N1,N2).
+        % Define when a road is removed (when edge exists but not new edge)
+        removed_edge(EN,N1,N2) :- edge(EN,N1,N2), not new_edge(EN,N1,N2).
 
+        #maximize {{ removed_edge(EN,N1,N2) : removed_edge(EN,N1,N2) }}.
+
+        % Every new edge must also be assigned a prefab id
         1 {{ new_edge_type(SID, PID) : pid(PID) }} 1 :- new_edge(SID,_,_).
-        num_road_changes(N) :- N = #count {{ SID1 : new_edge_type(SID1, PID1), edge_type(SID2, PID2), PID1 != PID2, SID1 == SID2}}.
 
-        :- num_road_changes(N), n != N.
-
+        % Define when a road's prefabid (PID) has been changed
         road_type_changes(SID, N1, N2, PID1, PID2) :- edge_type(SID, PID1), new_edge_type(SID, PID2), PID1 != PID2, new_edge(SID,N1,N2).
 
-        removed_edge(EN,N1,N2) :- edge(EN,N1,N2), not new_edge(EN,N1,N2).
+        % Optimize: Maximize the number of roads with changed prefab ids
+        #maximize {{ road_type_changes(SID,N1,N2,PID1,PID2) : road_type_changes(SID,N1,N2,PID1,PID2) }}.
         """
-        
         return asp_program
 
     def run_asp(self, program):

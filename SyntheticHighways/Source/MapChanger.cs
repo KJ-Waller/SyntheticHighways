@@ -115,6 +115,8 @@ namespace SyntheticHighways.MapChanger
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, e.Message);
             }
 
+            /*DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Errors: " + errors);
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Results: " + results);*/
             // Delete temporary XML file now that python program has determined which roads to remove
             string currDir = Directory.GetCurrentDirectory();
             string deletePath = Path.Combine(currDir, xmlFileName);
@@ -138,7 +140,14 @@ namespace SyntheticHighways.MapChanger
             // Load in new XML document containing changes to be made
             XmlDocument doc = new XmlDocument();
             string changePath = Path.Combine(currDir, results);
-            doc.Load(changePath);
+            try
+            {
+                doc.Load(changePath);
+            } catch( Exception e)
+            {
+
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, e.Message);
+            }
 
             // Remove the roads from the map for initial changes
             XmlElement root = doc.DocumentElement;

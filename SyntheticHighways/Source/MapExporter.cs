@@ -154,7 +154,7 @@ namespace SyntheticHighways.MapExporter
                     int backwardLanes = 0;
                     netSegment.CountLanes((ushort) key, NetInfo.LaneType.Vehicle, VehicleInfo.VehicleType.Car, ref forwardLanes, ref backwardLanes);
 
-                    XmlAttribute fLanes = mapDoc.CreateAttribute("FowardLanes");
+                    XmlAttribute fLanes = mapDoc.CreateAttribute("ForwardLanes");
                     fLanes.Value = forwardLanes.ToString();
                     segment.Attributes.Append(fLanes);
 
