@@ -50,14 +50,14 @@ namespace SyntheticHighways.MapChanger
 
             // Make prefab changes in the map for initial changes
             XmlNodeList prefabChanges = root.SelectNodes("/root/SnapshotChanges/PrefabChange");
-            foreach (XmlNode node in prefabChanges)
+            /*foreach (XmlNode node in prefabChanges)
             {
                 ushort segmentId = Convert.ToUInt16(node.Attributes.GetNamedItem("SegmentId").Value);
                 ushort startNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("StartNodeId").Value);
                 ushort endNodeId = Convert.ToUInt16(node.Attributes.GetNamedItem("EndNodeId").Value);
                 uint prefabId = Convert.ToUInt16(node.Attributes.GetNamedItem("NewPrefabId").Value);
                 PrefabChange(segmentId, startNodeId, endNodeId, prefabId);
-            }
+            }*/
 
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Snapshot changes have been made");
 

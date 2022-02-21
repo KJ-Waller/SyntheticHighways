@@ -32,21 +32,21 @@ namespace SyntheticHighways
             SyntheticHighwaysConfiguration config = Configuration<SyntheticHighwaysConfiguration>.Load();
 
             // Add text fields for mod start delay, trajectory time interval, and max trajectory length
-            helper.AddTextfield("Mod Start Delay", "20", (value) =>
+            helper.AddTextfield("Mod Start Delay", config.ModStartDelay.ToString(), (value) =>
             {
                 Debug.Log(value.ToString());
                 config.ModStartDelay = int.Parse(value);
                 Configuration<SyntheticHighwaysConfiguration>.Save();
             });
 
-            helper.AddTextfield("Trajectory Time Interval", "5", (value) =>
+            helper.AddTextfield("Trajectory Time Interval", config.TrajectoryTimeInterval.ToString(), (value) =>
             {
                 Debug.Log(value.ToString());
                 config.TrajectoryTimeInterval = float.Parse(value);
                 Configuration<SyntheticHighwaysConfiguration>.Save();
             });
 
-            helper.AddTextfield("Max Trajectory Length", "5", (value) =>
+            helper.AddTextfield("Max Trajectory Length", config.MaxTrajectoryLength.ToString(), (value) =>
             {
                 Debug.Log(value.ToString());
                 config.MaxTrajectoryLength = int.Parse(value);
@@ -134,7 +134,7 @@ namespace SyntheticHighways
             string temp_fname = mapChanger.MakeInitialChanges(mapDoc);
 
             // Wait for changes to take effect.
-            yield return new WaitForSecondsRealtime(10);
+            yield return new WaitForSecondsRealtime(20);
 
             // Export the map to XML for first snapshot
             mapExporter.ExportMap(1, true);
@@ -149,7 +149,7 @@ namespace SyntheticHighways
             // * Change road directionality
 
             // Wait for changes to take effect.
-            yield return new WaitForSecondsRealtime(10);
+            yield return new WaitForSecondsRealtime(20);
 
             // Export map for second snapshot
             mapExporter.ExportMap(2, true);

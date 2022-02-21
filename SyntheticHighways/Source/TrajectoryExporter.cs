@@ -201,6 +201,8 @@ namespace SyntheticHighways.TrajectoryExporter
 
                 ++key;
             }
+            // Play simulation after locations have been fetched
+            /*sManager.SimulationPaused = false;*/
         }
     }
 }
