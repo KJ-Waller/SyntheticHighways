@@ -5,6 +5,7 @@ using ColossalFramework;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
+using SyntheticHighways.MapExporter;
 
 namespace SyntheticHighways.TrajectoryExporter
 {
@@ -12,15 +13,19 @@ namespace SyntheticHighways.TrajectoryExporter
     {
         VehicleManager vManager;
         SimulationManager sManager;
+        PathManager pManager;
         XmlDocument vehDoc;
+        XmlDocument pathDoc;
         private Dictionary<int, List<Vehicle>> vehDictionary;
         private Dictionary<int, List<string>> vehTimestamps;
+        private Dictionary<uint, List<ushort>> pathdictionary;
 
         void Start()
         {
             // Initialize vehicle manager
             vManager = Singleton<VehicleManager>.instance;
             sManager = Singleton<SimulationManager>.instance;
+            pManager = Singleton<PathManager>.instance;
         }
 
         public IEnumerator StartExport(int snapNumber, float timeInterval, int repetitions)
@@ -28,10 +33,64 @@ namespace SyntheticHighways.TrajectoryExporter
             // Initialize dictionaries for keeping track of vehicle locations and timestamps
             vehDictionary = new Dictionary<int, List<Vehicle>>();
             vehTimestamps = new Dictionary<int, List<string>>();
+            pathdictionary = new Dictionary<uint, List<ushort>>();
+
+            // Export all the paths/routes vehicles can take
+            /*ExportPaths(snapNumber);*/
 
             // Start Coroutine which calls ExportTrajectories every x seconds
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Initializing Coroutine");
             yield return StartCoroutine(ExportTrajectories(snapNumber, timeInterval, repetitions));
+        }
+
+        public void ExportPaths(int snapNumber)
+        {
+            // Initialize XML document
+            pathDoc = new XmlDocument();
+            XmlDeclaration xmlDeclaration = pathDoc.CreateXmlDeclaration("1.0", "UTF-8", null);
+            pathDoc.AppendChild(xmlDeclaration);
+            XmlElement root = pathDoc.CreateElement("Paths");
+            pathDoc.AppendChild(root);
+
+            for (int i = 0; i < pManager.m_pathUnitCount; i++)
+            {
+                XmlElement pathElement = pathDoc.CreateElement("Path");
+                XmlAttribute pathId = pathDoc.CreateAttribute("PathId");
+                pathId.Value = i.ToString();
+                pathElement.Attributes.Append(pathId);
+
+                PathUnit path = pManager.m_pathUnits.m_buffer[i];
+                for (int j = 0; j < path.m_positionCount; j++)
+                {
+                    PathUnit.Position pos = path.GetPosition(j);
+
+                    XmlElement pathSegment = pathDoc.CreateElement("Segment");
+                    XmlAttribute segmentId = pathDoc.CreateAttribute("SegmentId");
+                    segmentId.Value = pos.m_segment.ToString();
+                    pathSegment.Attributes.Append(segmentId);
+
+                    pathElement.AppendChild(pathSegment);
+                }
+
+                root.AppendChild(pathElement);
+            }
+
+            // After getting all paths, save the XML file
+            // Create a folder to save XML to
+            string cityName = (string)((SimulationMetaData)Singleton<SimulationManager>.instance.m_metaData).m_CityName;
+            string currDir = Directory.GetCurrentDirectory();
+            string folder = Path.Combine(currDir, "SyntheticHighways");
+
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            // Save paths to XML file in said folder
+            string fname = cityName + "_" + snapNumber.ToString() + "_paths.xml";
+            string saveName = Path.Combine(folder, fname);
+            pathDoc.Save(saveName);
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Paths saved to: " + saveName);
         }
 
         IEnumerator ExportTrajectories(int snapNumber, float timeInterval, int repetitions)
@@ -93,9 +152,13 @@ namespace SyntheticHighways.TrajectoryExporter
                 foreach (Vehicle veh in locations)
                 {
 
-                    // Get position and velocity of vehicle in last frame
+                    // Get position, velocity and rotation of vehicle in last frame
                     Vector3 pos = veh.GetLastFramePosition();
                     Vector3 vel = veh.GetLastFrameVelocity();
+                    Quaternion rot = veh.GetLastFrameData().m_rotation;
+
+                    // Calculate the forward direction of the vehicle using rotation and z unit vector
+                    Vector3 forward = rot * Vector3.forward;
 
                     // Add location element with x,y,z attributes to vehicle element
                     XmlElement loc = vehDoc.CreateElement("Location");
@@ -119,18 +182,57 @@ namespace SyntheticHighways.TrajectoryExporter
                     timestamp.Value = vehTimestamps[key][locIdx];
                     loc.Attributes.Append(timestamp);
 
-                    // Add heading child element to location element with n1,n2,n3 as attributes (normalized x,y,z)
-                    XmlElement heading = vehDoc.CreateElement("Heading");
+                    // Add velocity child element to location element with n1,n2,n3 as attributes (normalized x,y,z)
+                    XmlElement velocity = vehDoc.CreateElement("Velocity");
                     XmlAttribute n1 = vehDoc.CreateAttribute("n1");
                     n1.Value = vel.normalized.x.ToString();
-                    heading.Attributes.Append(n1);
+                    velocity.Attributes.Append(n1);
                     XmlAttribute n2 = vehDoc.CreateAttribute("n2");
                     n2.Value = vel.normalized.y.ToString();
-                    heading.Attributes.Append(n2);
+                    velocity.Attributes.Append(n2);
                     XmlAttribute n3 = vehDoc.CreateAttribute("n3");
                     n3.Value = vel.normalized.z.ToString();
-                    heading.Attributes.Append(n3);
+                    velocity.Attributes.Append(n3);
+                    loc.AppendChild(velocity);
+
+                    // Add heading child element to location element with n1,n2,n3 as attributes (normalized x,y,z)
+                    XmlElement heading = vehDoc.CreateElement("Heading");
+                    XmlAttribute fx = vehDoc.CreateAttribute("x");
+                    fx.Value = forward.x.ToString();
+                    heading.Attributes.Append(fx);
+                    XmlAttribute fy = vehDoc.CreateAttribute("y");
+                    fy.Value = forward.y.ToString();
+                    heading.Attributes.Append(fy);
+                    XmlAttribute fz = vehDoc.CreateAttribute("z");
+                    fz.Value = forward.z.ToString();
+                    heading.Attributes.Append(fz);
                     loc.AppendChild(heading);
+
+                    // Adda a Path child element to indicate which segment the vehicle is on
+                    PathUnit.Position pathPos = pManager.m_pathUnits.m_buffer[veh.m_path].GetPosition(veh.m_pathPositionIndex);
+                    XmlElement path = vehDoc.CreateElement("Path");
+                    XmlAttribute pathSegment = vehDoc.CreateAttribute("Segment");
+                    pathSegment.Value = pathPos.m_segment.ToString();
+                    path.Attributes.Append(pathSegment);
+                    XmlAttribute pathId = vehDoc.CreateAttribute("PathId");
+                    pathId.Value = veh.m_path.ToString();
+                    path.Attributes.Append(pathId);
+                    XmlAttribute pathPosIdx = vehDoc.CreateAttribute("PathPosIdx");
+                    pathPosIdx.Value = veh.m_pathPositionIndex.ToString();
+                    path.Attributes.Append(pathPosIdx);
+                    loc.AppendChild(path);
+
+                    if (!pathdictionary.ContainsKey(veh.m_path))
+                    {
+                        PathUnit pathList = pManager.m_pathUnits.m_buffer[veh.m_path];
+                        List<ushort> newPathList = new List<ushort>();
+                        for (int i = 0; i < pathList.m_positionCount; i++)
+                        {
+                            newPathList.Add(pathList.GetPosition(i).m_segment);
+                        }
+                        pathdictionary.Add(veh.m_path, newPathList);
+                    }
+
 
                     // Add location element as child to the vehicle
                     vehicleElement.AppendChild(loc);
@@ -162,6 +264,40 @@ namespace SyntheticHighways.TrajectoryExporter
             string saveName = Path.Combine(folder, fname);
             vehDoc.Save(saveName);
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Trajectories saved to: " + saveName);
+
+            // Save paths to XML file in said folder
+            // Initialize XML document
+            pathDoc = new XmlDocument();
+            xmlDeclaration = pathDoc.CreateXmlDeclaration("1.0", "UTF-8", null);
+            pathDoc.AppendChild(xmlDeclaration);
+            root = pathDoc.CreateElement("Paths");
+            pathDoc.AppendChild(root);
+
+            foreach (var item in pathdictionary)
+            {
+                XmlElement pathElement = pathDoc.CreateElement("Path");
+                XmlAttribute pathId = pathDoc.CreateAttribute("PathId");
+                pathId.Value = item.Key.ToString();
+                pathElement.Attributes.Append(pathId);
+
+                List<ushort> path = item.Value;
+                foreach (ushort seg in path)
+                {
+                    XmlElement pathSegment = pathDoc.CreateElement("Segment");
+                    XmlAttribute segmentId = pathDoc.CreateAttribute("SegmentId");
+                    segmentId.Value = seg.ToString();
+                    pathSegment.Attributes.Append(segmentId);
+
+                    pathElement.AppendChild(pathSegment);
+                }
+
+                root.AppendChild(pathElement);
+            }
+
+            fname = cityName + "_" + snapNumber.ToString() + "_paths.xml";
+            saveName = Path.Combine(folder, fname);
+            pathDoc.Save(saveName);
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Paths saved to: " + saveName);
         }
 
         void ExportVehicleLocations()
