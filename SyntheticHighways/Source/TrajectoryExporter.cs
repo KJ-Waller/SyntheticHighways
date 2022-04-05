@@ -6,6 +6,7 @@ using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using SyntheticHighways.MapExporter;
+using System;
 
 namespace SyntheticHighways.TrajectoryExporter
 {
@@ -298,6 +299,15 @@ namespace SyntheticHighways.TrajectoryExporter
             saveName = Path.Combine(folder, fname);
             pathDoc.Save(saveName);
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Paths saved to: " + saveName);
+
+            vehDoc.RemoveAll();
+            pathDoc.RemoveAll();
+            vehDoc = null;
+            pathDoc = null;
+            vehDictionary = null;
+            vehTimestamps = null;
+            pathdictionary = null;
+            GC.Collect();
         }
 
         void ExportVehicleLocations()
