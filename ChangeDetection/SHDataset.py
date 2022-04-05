@@ -14,7 +14,7 @@ geodesic = pyproj.Geod(ellps='WGS84')
 
 class SHDataset(object):
     def __init__(self, dataset_dir='./dataset/', split_threshold=400, ref_coord=(52.356758, 4.894004),
-                coord_scale_factor=1):
+                coord_scale_factor=1, noise=True):
         """
         Initializes the dataset
 
@@ -31,6 +31,9 @@ class SHDataset(object):
         self.split_threshold = split_threshold
         self.ref_coord = ref_coord
         self.coord_scale_factor = coord_scale_factor
+        self.noise = noise
+        self.noise_mu = 0.0
+        self.noise_sigma = 0.0001
         self.dataset_dir = dataset_dir
         self.rawdata_dir = os.path.join(self.dataset_dir, 'raw_data')
         
@@ -69,7 +72,12 @@ class SHDataset(object):
         self.cleandata_dir = os.path.join(self.dataset_dir, 'clean_data')
         if not os.path.exists(self.cleandata_dir):
             os.mkdir(self.cleandata_dir)
-        self.dataset_fname = os.path.join(self.cleandata_dir, 'dataset_cleaned.hdf5')
+            
+        if self.noise:
+            self.dataset_fname = os.path.join(self.cleandata_dir, 'dataset_cleaned_noise.hdf5')
+        else:
+            self.dataset_fname = os.path.join(self.cleandata_dir, 'dataset_cleaned.hdf5')
+
         if not os.path.isfile(self.dataset_fname):
             self.data = []
             pbar = tqdm(range(self.__len__()))
@@ -116,7 +124,7 @@ class SHDataset(object):
         T2 = self.parse_trajectories(traj2_fname)
         P2 = self.parse_paths(path2_fname)
         
-        return G1, {'T': T1, 'P': P1}, G2, {'T': T2, 'P': P1}
+        return G1, {'T': T1, 'P': P1}, G2, {'T': T2, 'P': P2}
     
     def parse_map(self, xml_fname, service='Road'):
         """
@@ -260,6 +268,8 @@ class SHDataset(object):
         # Convert coordinates to wgs84
         x,y = zip(*[(t['lat'], t['lon']) for traj in trajectories for t in traj])
         coords = cart_to_wgs84(self.ref_coord, x, y, scale_factor=self.coord_scale_factor)
+        if self.noise:
+            coords = self.add_noise(coords, self.noise_mu, self.noise_sigma)
         new_T = []
         i = 0
         for traj in trajectories:
@@ -294,13 +304,12 @@ class SHDataset(object):
             The XML filename which to read
         """
         # Read the XML file
-        traj_tree = ET.parse(xml_fname)
-        traj_root = traj_tree.getroot()
-        paths = traj_root[0]
+        paths_tree = ET.parse(xml_fname)
+        paths_root = paths_tree.getroot()
 
         paths = {}
 
-        for path in paths:
+        for path in paths_root:
             path_id = int(path.attrib['PathId'])
             segments = [int(segment.attrib['SegmentId']) for segment in path]
             paths[path_id] = segments
@@ -328,6 +337,13 @@ class SHDataset(object):
             new_T.extend(splits)
         return new_T
 
+    def add_noise(self, coords, mu, sigma):
+        noise_lat = np.random.normal(mu, sigma, len(coords))
+        noise_lon = np.random.normal(mu, sigma, len(coords))
+        noise = np.stack((noise_lat, noise_lon), axis=1)
+        coords = coords + noise
+        return coords
+
     def split_traj(self, traj, thresh):
         if len(traj) == 1:
             return [traj]
@@ -339,9 +355,12 @@ class SHDataset(object):
         splits = np.split(traj, idxs, axis=0)
         splits = [split.tolist() for split in splits]
         return splits
-            
         
     def __len__(self):
         return len(self.maps)
 
 # dataset = SHDataset()
+# dataset = SHDataset(noise=True, dataset_dir='./dataset_250/')
+# G1,T1,G2,T2 = dataset.read_snapshots(0)
+# bbox = (52.355, 52.365, 4.860, 4.900)
+# G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2,bbox)

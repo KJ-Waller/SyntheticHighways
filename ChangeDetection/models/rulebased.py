@@ -4,11 +4,9 @@ from scipy.spatial import KDTree
 from scipy.special import softmax
 
 class RulebasedDetector(object):
-    def __init__(self, G1, n=10, max_dist=1e-4, score_limit=1, Cd=1.0, Ch=.1):
+    def __init__(self, G1, k=10, Cd=1.0, Ch=.1):
         self.G1 = G1.copy()
-        self.n = n
-        self.max_dist = max_dist
-        self.score_limit = score_limit
+        self.k = k
         self.Cd, self.Ch = Cd, Ch
         
         self.edge_idx = {i: edge for i, edge in enumerate(G1.edges(data=True))}
@@ -51,9 +49,9 @@ class RulebasedDetector(object):
             
     def map_match_point(self, p):
         pos = np.array([p['lat'], p['lon']])
-        heading = np.deg2rad(p['heading'])
+        # heading = np.deg2rad(p['heading'])
 
-        dists, idxs = self.tree.query(pos, k=self.n)
+        dists, idxs = self.tree.query(pos, k=self.k)
         dists, idxs = dists[dists != np.inf], idxs[dists != np.inf]
         
         headings = self.G_headings[idxs]
