@@ -27,7 +27,8 @@ def groundtruth_labels(G1,G2):
 
 def predicted_labels(G_pred):
     scores = nx.get_edge_attributes(G_pred, 'weight')
-    return scores
+    sorted_scores = {edge: scores[edge] for edge in sorted(scores)}
+    return sorted_scores
     
 def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False):
     if log_scale:

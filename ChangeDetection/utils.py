@@ -96,8 +96,9 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_siz
     if show_nodes:
         nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_size, ax=ax)
     if show_labels:
-        node_labels = nx.get_node_attributes(G, 'label')
-        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=10, ax=ax)
+        # node_labels = nx.get_node_attributes(G, 'label')
+        node_labels = {node: str(node) for node in G.nodes}
+        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=5, ax=ax)
         
     # Plot edges using weights if enabled
     if use_weights:
@@ -207,7 +208,8 @@ def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0001):
         or node[1]['lon'] < (lon_min-map_offset) or node[1]['lon'] > (lon_max+map_offset):
             G1.remove_node(node[0])
     for node in G2.copy().nodes(data=True):
-        if node[1]['lat'] < lat_min or node[1]['lat'] > lat_max or node[1]['lon'] < lon_min or node[1]['lon'] > lon_max:
+        if node[1]['lat'] < (lat_min-map_offset) or node[1]['lat'] > (lat_max+map_offset) \
+        or node[1]['lon'] < (lon_min-map_offset) or node[1]['lon'] > (lon_max+map_offset):
             G2.remove_node(node[0])
 
     T1_new = []

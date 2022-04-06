@@ -49,7 +49,8 @@ class RulebasedDetector(object):
             
     def map_match_point(self, p):
         pos = np.array([p['lat'], p['lon']])
-        # heading = np.deg2rad(p['heading'])
+        heading = np.deg2rad(p['heading'])
+        # heading = p['heading']
 
         dists, idxs = self.tree.query(pos, k=self.k)
         dists, idxs = dists[dists != np.inf], idxs[dists != np.inf]

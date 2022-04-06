@@ -7,7 +7,7 @@ from tqdm import tqdm
 class HMMChangeDetector(object):
     def __init__(self, G1, use_latlon=True, max_dist=1000, max_dist_init=1000, 
                 min_prob_norm=0.001, non_emitting_states=True,
-                non_emitting_length_factor=0.75, obs_noise=10, 
+                non_emitting_length_factor=0.75, obs_noise=50, 
                 obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False):
 
         # Initialize global variables/parameters
