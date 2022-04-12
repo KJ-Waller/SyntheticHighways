@@ -76,7 +76,7 @@ def combine_graphs(G1,G2):
     G = nx.compose(G1,G2)
     return G
 
-def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, show_img=True):
+def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, show_img=True, fontsize=5, savename=None):
     if G.size() == 0:
         print("Graph is empty")
         return
@@ -98,7 +98,7 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_siz
     if show_labels:
         # node_labels = nx.get_node_attributes(G, 'label')
         node_labels = {node: str(node) for node in G.nodes}
-        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=5, ax=ax)
+        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=fontsize, ax=ax)
         
     # Plot edges using weights if enabled
     if use_weights:
@@ -148,6 +148,9 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_siz
     plt.plot()
     if show_img:
         plt.show()
+    if savename is not None:
+        fig1 = plt.gcf()
+        fig1.savefig(f'{savename}.png')
     
 def compare_snapshots(G1, G2):
     # Convert graphs to nx graphs
@@ -340,6 +343,7 @@ def format_trajmatrix(T, T_num_max=500, T_len_max=50):
         
     traj_matrix = np.zeros((T_num_max, T_len_max, 2))
     for i, traj in enumerate(sampled_T):
+        print(traj)
         for j, t in enumerate(traj):
             if j >= (T_len_max-1):
                 continue
@@ -406,9 +410,9 @@ def get_next_seed(p1, p2, offset=50):
 
 def place_seeds(G, interval=50):
 
-    edge_traversal = list(nx.edge_dfs(map_to_nxgraph(G)))
+    edge_traversal = list(nx.edge_dfs(G))
 
-    node_pos_dict = {node['node_id']: (node['lat'], node['lon']) for node in G['nodes']}
+    node_pos_dict = {node[0]: (node[1]['lat'], node[1]['lon']) for node in G.nodes(data=True)}
     edge_traversal_dist = []
 
     for edge in edge_traversal:
@@ -424,6 +428,8 @@ def place_seeds(G, interval=50):
         })
 
     edge_traversal = edge_traversal_dist
+    if len(edge_traversal) == 0:
+        return None, None
 
     # List to keep track of seeds ((lat, lon), azi)
     seeds = []
@@ -484,13 +490,16 @@ def T_to_img(T, img_dim=(500,500)):
     for idx, (lat,lon) in enumerate(zip(lats_binned, lons_binned)):
         img[lon,lat] = 1
 
-    img = np.flip(img, axis=0)
+    # img = np.flip(img, axis=1)
+    img = np.rot90(img, k=1)
     
     return img
 
 def G_to_img(G, img_dim=(500,500)):
     
     seeds, _ = place_seeds(G, interval=5)
+    if seeds is None:
+        return None
     lats = np.array([seed[0][0] for seed in seeds])
     lons = np.array([seed[0][1] for seed in seeds])
     lat_bins = np.linspace(lats.min(), lats.max(), num=img_dim[1]-1)
@@ -501,9 +510,10 @@ def G_to_img(G, img_dim=(500,500)):
     img = np.zeros(img_dim)
 
     for idx, (lat,lon) in enumerate(zip(lats_binned, lons_binned)):
-        img[lon,lat] = 1
+        img[lon,lat] += 1
 
-    img = np.flip(img, axis=0)
+    # img = np.flip(img, axis=1)
+    img = np.rot90(img, k=1)
     
     return img
 
