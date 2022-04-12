@@ -1,20 +1,38 @@
 import os
-from tracemalloc import start
-from turtle import back
 import xml.etree.ElementTree as ET
+from xxlimited import new
 from utils import *
-import pandas as pd
-from datetime import datetime
 import pickle5 as pickle
 from tqdm import tqdm
 import numpy as np
 import pyproj
 from geographiclib.geodesic import Geodesic
+import re
+import argparse
 geodesic = pyproj.Geod(ellps='WGS84')
 
+class OUActionNoise(object):
+    def __init__(self, mu, sigma=3.0, theta=1.0, dt=.0001, x0=None):
+        self.theta = theta
+        self.mu = mu
+        self.sigma = sigma
+        self.dt = dt
+        self.x0 = x0
+        self.reset()
+
+    def __call__(self):
+        x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + \
+            self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
+
+        self.x_prev = x
+        return x
+
+    def reset(self):
+        self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
+
 class SHDataset(object):
-    def __init__(self, dataset_dir='./dataset/', split_threshold=400, ref_coord=(52.356758, 4.894004),
-                coord_scale_factor=1, noise=True):
+    def __init__(self, dataset_dir='./dataset/', split_threshold=200, ref_coord=(52.356758, 4.894004),
+                coord_scale_factor=1, noise=True, noise_config=0, save_cleaned_data=True):
         """
         Initializes the dataset
 
@@ -26,77 +44,124 @@ class SHDataset(object):
         split_threshold : number
             What threshold to use when splitting/cleaning up trajectories.
         """
+        if noise_config > 3:
+            raise ValueError(f"There are only 4 noise configs. Please specify a noise configuration in the range[0,1,2,3]")
         
         # Initialize global variables
+        self.save_cleaned_data = save_cleaned_data
         self.split_threshold = split_threshold
         self.ref_coord = ref_coord
         self.coord_scale_factor = coord_scale_factor
         self.noise = noise
-        self.noise_mu = 0.0
-        self.noise_sigma = 0.0001
+        self.pnoise_shift = 0.05
+        sigmas = [0.0000125+(i*0.000025) for i in range(4)]
+        thetas = sigmas
+        
+        self.noise_mu = np.array([0,0])
+        self.noise_sigma = sigmas[noise_config]
+        self.noise_theta = thetas[noise_config]
+        self.noise_dt = .1
+        self.noise_function = OUActionNoise(self.noise_mu, self.noise_sigma, self.noise_theta, self.noise_dt, x0=[0,0])
         self.dataset_dir = dataset_dir
         self.rawdata_dir = os.path.join(self.dataset_dir, 'raw_data')
         
         # Read raw data XML filenames
         self.files = [os.path.join(self.rawdata_dir, fname) for fname in sorted(os.listdir(self.rawdata_dir)) if '.xml' in fname]
+
+        # First find all unique map names
+        map_names = []
+        for file in self.files:
+            match = re.findall(r'/([A-Z0-9 .]+)_1_map.xml', file, flags=re.IGNORECASE)
+            if len(match) == 1:
+                map_names.append(match[0])
+
+        # Then for each map name, find all batches for trajectorie and path filenames
         self.maps = []
-        for i in range(len(self.files)):
-            map_name = self.files[i]
-            if i%7 == 0:
-                map_name = map_name[map_name.rfind('/')+1:map_name.rfind('_map')-2]
-                curr_map = {
-                    'map_name': map_name,
-                    'snapshot1': {
-                        'map': self.files[i]
-                    }
-                }
-            if i%7 == 1:
-                curr_map['snapshot1']['paths'] = self.files[i]
-            if i%7 == 2:
-                curr_map['snapshot1']['trajectories'] = self.files[i]
-            if i%7 == 3:
-                curr_map['snapshot2'] = {
-                    'map': self.files[i]
-                }
-            if i%7 == 4:
-                curr_map['snapshot2']['paths'] = self.files[i]
-            if i%7 == 5:
-                curr_map['snapshot2']['trajectories'] = self.files[i]
-            if i%7 == 6:
-                curr_map['changes'] = self.files[i]
-                self.maps.append(curr_map)
-                
-                
-        # Create cleaned dataset file in "clean_data" directory if it doesn't exist yet
-        # Otherwise, load it from file
+        map_names = sorted(list(set(map_names)))
+        for map_name in map_names:
+            T1_fnames = []
+            T2_fnames = []
+            P1_fnames = []
+            P2_fnames = []
+            G1_fname = None
+            G2_fname = None
+            changes_fname = None
+            for file in self.files:
+                if map_name in file and 'batch' in file and '1_trajectories' in file:
+                    T1_fnames.append(file)
+                if map_name in file and 'batch' in file and '2_trajectories' in file:
+                    T2_fnames.append(file)
+                if map_name in file and 'batch' in file and '1_paths' in file:
+                    P1_fnames.append(file)
+                if map_name in file and 'batch' in file and '2_paths' in file:
+                    P2_fnames.append(file)
+                if map_name in file and 'batch' not in file and '1_map.xml' in file:
+                    G1_fname = file
+                if map_name in file and 'batch' not in file and '2_map.xml' in file:
+                    G2_fname = file
+                if map_name in file and 'batch' not in file and 'changes' in file:
+                    changes_fname = file
+            self.maps.append({
+                'map_name': map_name,
+                'snapshot1': {
+                    'map': G1_fname,
+                    'trajectories': T1_fnames,
+                    'paths': P1_fnames
+                },
+                'snapshot2': {
+                    'map': G2_fname,
+                    'trajectories': T2_fnames,
+                    'paths': P2_fnames
+                },
+                'changes': changes_fname
+            })
+
+
         self.cleandata_dir = os.path.join(self.dataset_dir, 'clean_data')
         if not os.path.exists(self.cleandata_dir):
             os.mkdir(self.cleandata_dir)
-            
-        if self.noise:
-            self.dataset_fname = os.path.join(self.cleandata_dir, 'dataset_cleaned_noise.hdf5')
-        else:
-            self.dataset_fname = os.path.join(self.cleandata_dir, 'dataset_cleaned.hdf5')
 
-        if not os.path.isfile(self.dataset_fname):
-            self.data = []
-            pbar = tqdm(range(self.__len__()))
-            for i in pbar:
-                pbar.set_description(desc=f"Loading map: {self.maps[i]['map_name']}")
+        # For each map, if cleaned file doesn't exist, save it
+        pbar = tqdm(enumerate(self.maps))
+        for i, fnames in pbar:
+            map_name = fnames['map_name']
+            cleaned_fname = os.path.join(self.cleandata_dir, f'{map_name}_cleaned_nonoise.hdf5')
+
+            
+            # Create cleaned dataset and save to pickle if it doesn't exist
+            pbar.set_description(desc=f"Loading map: {map_name}")
+            if not os.path.isfile(cleaned_fname) and self.save_cleaned_data:
                 G1,T1,G2,T2 = self.load_snapshots(i)
 
-                self.data.append((G1,T1,G2,T2))
-        
-            self.data = np.array(self.data)
-            with open(self.dataset_fname, 'wb') as handle:
-                pickle.dump(self.data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        else:
+                with open(cleaned_fname, 'wb') as handle:
+                    pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
+            
+            # Add noise to trajectories for current configuration, if noise is selected/enabled
+            if self.noise:
+                cleaned_fname_noise = os.path.join(self.cleandata_dir, f'{map_name}_cleaned_noise_config{noise_config+1}.hdf5')
+                if not os.path.isfile(cleaned_fname_noise):
+                    G1,T1,G2,T2 = self.read_snapshots(i)
+                    T1['T'] = self.add_noise(T1['T'])
+                    T2['T'] = self.add_noise(T2['T'])
 
-            with open(self.dataset_fname, 'rb') as handle:
-                self.data = pickle.load(handle)
+                    with open(cleaned_fname_noise, 'wb') as handle:
+                        pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+                
+                self.maps[i]['cleaned_data'] = cleaned_fname_noise
+            else:
+                self.maps[i]['cleaned_data'] = cleaned_fname
+
+
 
     def read_snapshots(self, i):
-        return self.data[i]
+        if self.save_cleaned_data:
+            cleaned_fname = self.maps[i]['cleaned_data']
+            with open(cleaned_fname, 'rb') as handle:
+                G1,T1,G2,T2 = pickle.load(handle)
+        else:
+            G1,T1,G2,T2 = self.load_snapshots(i)
+        return G1,T1,G2,T2
                 
     def load_snapshots(self, i):
         """
@@ -110,19 +175,27 @@ class SHDataset(object):
 
         # Get the filenames containing the map and trajectories of the two snapshots
         map1_fname = self.maps[i]['snapshot1']['map']
-        traj1_fname = self.maps[i]['snapshot1']['trajectories']
-        path1_fname = self.maps[i]['snapshot1']['paths']
+        traj1_fnames = self.maps[i]['snapshot1']['trajectories']
+        path1_fnames = self.maps[i]['snapshot1']['paths']
         map2_fname = self.maps[i]['snapshot2']['map']
-        traj2_fname = self.maps[i]['snapshot2']['trajectories']
-        path2_fname = self.maps[i]['snapshot2']['paths']
+        traj2_fnames = self.maps[i]['snapshot2']['trajectories']
+        path2_fnames = self.maps[i]['snapshot2']['paths']
         
-        # Read them into lists
+        # Read the files in (this will take a while)
         G1 = self.parse_map(map1_fname)
-        T1 = self.parse_trajectories(traj1_fname)
-        P1 = self.parse_paths(path1_fname)
+        T1 = []
+        for traj1_fname in traj1_fnames:
+            T1 = [*T1, *self.parse_trajectories(traj1_fname)]
+        P1 = []
+        for path1_fname in path1_fnames:
+            P1 = [*P1, *self.parse_paths(path1_fname)]
         G2 = self.parse_map(map2_fname)
-        T2 = self.parse_trajectories(traj2_fname)
-        P2 = self.parse_paths(path2_fname)
+        T2 = []
+        for traj2_fname in traj2_fnames:
+            T2 = [*T2, *self.parse_trajectories(traj2_fname)]
+        P2 = []
+        for path2_fname in path2_fnames:
+            P2 = [*P2, *self.parse_paths(path2_fname)]
         
         return G1, {'T': T1, 'P': P1}, G2, {'T': T2, 'P': P2}
     
@@ -266,33 +339,9 @@ class SHDataset(object):
         trajectories = self.clean_t(trajectories, self.split_threshold)
         
         # Convert coordinates to wgs84
-        x,y = zip(*[(t['lat'], t['lon']) for traj in trajectories for t in traj])
-        coords = cart_to_wgs84(self.ref_coord, x, y, scale_factor=self.coord_scale_factor)
-        if self.noise:
-            coords = self.add_noise(coords, self.noise_mu, self.noise_sigma)
-        new_T = []
-        i = 0
-        for traj in trajectories:
-            curr_t = []
-            for t in traj:
-                curr_t.append({
-                    'lat': coords[i][0],
-                    'lon': coords[i][1],
-                    'speed': t['speed'],
-                    'x': t['x'],
-                    'y': t['y'],
-                    'z': t['z'],
-                    'heading': t['heading'],
-                    'timestamp': t['timestamp'],
-                    'gt_segment': t['gt_segment'],
-                    'path_id': t['path_id'],
-                    'pathpos_idx': t['pathpos_idx'],
-                })
-                i+=1
-
-            new_T.append(curr_t)
+        trajectories = self.to_wgs84(trajectories)
         
-        return new_T
+        return trajectories
 
     def parse_paths(self, xml_fname):
         """
@@ -337,12 +386,71 @@ class SHDataset(object):
             new_T.extend(splits)
         return new_T
 
-    def add_noise(self, coords, mu, sigma):
-        noise_lat = np.random.normal(mu, sigma, len(coords))
-        noise_lon = np.random.normal(mu, sigma, len(coords))
-        noise = np.stack((noise_lat, noise_lon), axis=1)
-        coords = coords + noise
-        return coords
+    def to_wgs84(self, T):
+
+        i = 0
+        x,y = zip(*[(t['lat'], t['lon']) for traj in T for t in traj])
+        coords = cart_to_wgs84(self.ref_coord, x, y, scale_factor=self.coord_scale_factor)
+        new_T = []
+        for traj in T:
+            curr_t = []
+            for t in traj:
+                curr_t.append({
+                    'lat': coords[i][0],
+                    'lon': coords[i][1],
+                    'speed': t['speed'],
+                    'x': t['x'],
+                    'y': t['y'],
+                    'z': t['z'],
+                    'heading': t['heading'],
+                    'timestamp': t['timestamp'],
+                    'gt_segment': t['gt_segment'],
+                    'path_id': t['path_id'],
+                    'pathpos_idx': t['pathpos_idx'],
+                })
+                i+=1
+
+            new_T.append(curr_t)
+        return new_T
+
+    def add_noise(self, T):
+        new_T = []
+        for t in T:
+            new_T.append(self.add_noise_t(t))
+        return new_T
+
+    def add_noise_t(self, t):
+        ou_noise = np.array([self.noise_function() for i in range(len(t))])
+        old_coords = np.array([(p['lat'], p['lon']) for p in t])
+        new_coords = old_coords + ou_noise
+
+        shift_probs = np.expand_dims(np.random.binomial(1, self.pnoise_shift, len(t)), axis=1)
+        shift_noise_lat = np.random.normal(0, self.noise_sigma, len(t))
+        shift_noise_lon = np.random.normal(0, self.noise_sigma, len(t))
+        shift_noise = np.stack((shift_noise_lat, shift_noise_lon), axis=1)
+        shift_noise = shift_noise * shift_probs
+
+        final_noise = new_coords + shift_noise
+
+        new_t = []
+        for i, p in enumerate(t):
+            new_t.append({
+                'lat': final_noise[i,0],
+                'lon': final_noise[i,1],
+                'speed': p['speed'],
+                'x': p['x'],
+                'y': p['y'],
+                'z': p['z'],
+                'heading': p['heading'],
+                'timestamp': p['timestamp'],
+                'gt_segment': p['gt_segment'],
+                'path_id': p['path_id'],
+                'pathpos_idx': p['pathpos_idx'],
+            })
+        
+        self.noise_function.reset()
+
+        return new_t
 
     def split_traj(self, traj, thresh):
         if len(traj) == 1:
@@ -359,8 +467,17 @@ class SHDataset(object):
     def __len__(self):
         return len(self.maps)
 
-# dataset = SHDataset()
-# dataset = SHDataset(noise=True, dataset_dir='./dataset_250/')
-# G1,T1,G2,T2 = dataset.read_snapshots(0)
-# bbox = (52.355, 52.365, 4.860, 4.900)
-# G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2,bbox)
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
+    parser.add_argument('--noise', default=True, type=bool, help='Add noise to trajectories')
+    parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
+    parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
+
+    args = parser.parse_args()
+
+
+    dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config)
