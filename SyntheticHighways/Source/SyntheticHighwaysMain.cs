@@ -52,6 +52,13 @@ namespace SyntheticHighways
                 config.MaxTrajectoryLength = int.Parse(value);
                 Configuration<SyntheticHighwaysConfiguration>.Save();
             });
+
+            helper.AddTextfield("Number of Batches", config.BatchNumber.ToString(), (value) =>
+            {
+                Debug.Log(value.ToString());
+                config.BatchNumber = int.Parse(value);
+                Configuration<SyntheticHighwaysConfiguration>.Save();
+            });
         }
     }
 
@@ -70,6 +77,7 @@ namespace SyntheticHighways
         float trajectoryTimeInterval = 10f;
         int maxTrajectoryLength = 5;
         int modStartDelay = 5;
+        int batchNumber = 3;
 
         bool modRunning = false;
 
@@ -96,10 +104,12 @@ namespace SyntheticHighways
             trajectoryTimeInterval = config.TrajectoryTimeInterval;
             maxTrajectoryLength = config.MaxTrajectoryLength;
             modStartDelay = config.ModStartDelay;
+            batchNumber = config.BatchNumber;
 
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Mod will start in: " + modStartDelay.ToString() + " seconds");
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Time Interval: " + trajectoryTimeInterval.ToString());
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Trajectory Length: " + maxTrajectoryLength.ToString());
+            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Number of batches: " + batchNumber.ToString());
 
             // Initialize map exporter
             mapExporter = mapExpGO.AddComponent<MapExporter.MapExporter>();
@@ -123,7 +133,6 @@ namespace SyntheticHighways
         IEnumerator CollectData()
         {
             /*modRunning = true;*/
-
             // Wait before starting the mod
             yield return new WaitForSecondsRealtime(modStartDelay);
 
@@ -138,8 +147,11 @@ namespace SyntheticHighways
 
             // Export the map to XML for first snapshot
             mapExporter.ExportMap(1, true);
-            // Record trajectories for first snapshot
-            yield return StartCoroutine(trajExporter.StartExport(1, trajectoryTimeInterval, maxTrajectoryLength));
+            for (int i = 0; i < batchNumber; i++)
+            {
+                // Record trajectories for first snapshot
+                yield return StartCoroutine(trajExporter.StartExport(1, trajectoryTimeInterval, maxTrajectoryLength, i));
+            }
 
             // Add in removed roads again
             mapChanger.ReinitChanges(temp_fname);
@@ -151,10 +163,13 @@ namespace SyntheticHighways
             // Wait for changes to take effect.
             yield return new WaitForSecondsRealtime(20);
 
-            // Export map for second snapshot
-            mapExporter.ExportMap(2, true);
-            // Record trajectories for second snapshot
-            yield return StartCoroutine(trajExporter.StartExport(2, trajectoryTimeInterval, maxTrajectoryLength));
+            for (int i = 0; i < batchNumber; i++)
+            {
+                // Export map for second snapshot
+                mapExporter.ExportMap(2, true);
+                // Record trajectories for second snapshot
+                yield return StartCoroutine(trajExporter.StartExport(2, trajectoryTimeInterval, maxTrajectoryLength, i));
+            }
 
             LoadNextMap();
         }

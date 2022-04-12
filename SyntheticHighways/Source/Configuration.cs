@@ -92,5 +92,6 @@ namespace SyntheticHighways
         public float TrajectoryTimeInterval { get; set; }
         public int MaxTrajectoryLength { get; set; }
         public int ModStartDelay { get; set; }
+        public int BatchNumber { get; set; }
     }
 }

@@ -29,7 +29,7 @@ namespace SyntheticHighways.TrajectoryExporter
             pManager = Singleton<PathManager>.instance;
         }
 
-        public IEnumerator StartExport(int snapNumber, float timeInterval, int repetitions)
+        public IEnumerator StartExport(int snapNumber, float timeInterval, int repetitions, int batchNumber)
         {
             // Initialize dictionaries for keeping track of vehicle locations and timestamps
             vehDictionary = new Dictionary<int, List<Vehicle>>();
@@ -41,7 +41,7 @@ namespace SyntheticHighways.TrajectoryExporter
 
             // Start Coroutine which calls ExportTrajectories every x seconds
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Initializing Coroutine");
-            yield return StartCoroutine(ExportTrajectories(snapNumber, timeInterval, repetitions));
+            yield return StartCoroutine(ExportTrajectories(snapNumber, timeInterval, repetitions, batchNumber));
         }
 
         public void ExportPaths(int snapNumber)
@@ -94,7 +94,7 @@ namespace SyntheticHighways.TrajectoryExporter
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Paths saved to: " + saveName);
         }
 
-        IEnumerator ExportTrajectories(int snapNumber, float timeInterval, int repetitions)
+        IEnumerator ExportTrajectories(int snapNumber, float timeInterval, int repetitions, int batchNumber)
         {
             // Fetch "repetitions" number of locations per vehicle, waiting "timeInterval" number of seconds in between
             for (int i = 0; i < repetitions; i++)
@@ -261,7 +261,7 @@ namespace SyntheticHighways.TrajectoryExporter
             }
 
             // Save trajectories to XML file in said folder
-            string fname = cityName + "_" + snapNumber.ToString() + "_trajectories.xml";
+            string fname = cityName + "_" + snapNumber.ToString() + "_trajectories_batch" + batchNumber.ToString() + " .xml";
             string saveName = Path.Combine(folder, fname);
             vehDoc.Save(saveName);
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Trajectories saved to: " + saveName);
@@ -295,7 +295,7 @@ namespace SyntheticHighways.TrajectoryExporter
                 root.AppendChild(pathElement);
             }
 
-            fname = cityName + "_" + snapNumber.ToString() + "_paths.xml";
+            fname = cityName + "_" + snapNumber.ToString() + "_paths_batch" + batchNumber.ToString() + ".xml";
             saveName = Path.Combine(folder, fname);
             pathDoc.Save(saveName);
             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Paths saved to: " + saveName);
