@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--exp_name', default='high_sample', type=str, help='Name of experiment')
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
-    parser.add_argument('--noise', default=True, type=bool, help='Add noise to trajectories')
+    parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
