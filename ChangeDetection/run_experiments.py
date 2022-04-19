@@ -5,7 +5,8 @@ from utils import *
 from metrics import *
 from models.random import RandomDetector
 from models.rulebased import RulebasedDetector
-from models.hmm import HMMChangeDetector
+# from models.hmm import HMMChangeDetector
+from models.hmm_fast import HMMChangeDetectorFast
 import random
 import pickle5 as pickle
 
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
+    parser.add_argument('--num_cpu_hmm', default=4, type=int, help='Number of CPUs to use for HMM change detector')
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.355, 52.365, 4.860, 4.900], type=float, help='Set bounding box to train on map')
@@ -58,8 +60,8 @@ if __name__ == '__main__':
     scores_rand = predicted_labels(G2_pred_rand)
     p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_logscale_random'))
     p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_random'), log_scale=False)
-    predictions_rand = {k: int(scores_rand[k] == 0) for k in gt_labels}
-    fscore_rand = fscore(gt_labels, predictions_rand)
+    # predictions_rand = {k: int(scores_rand[k] == 0) for k in gt_labels}
+    fscore_rand = fscore(gt_labels, scores_rand)
 
     # Run experiment for rulebased change detector
     rule_det = RulebasedDetector(G1)
@@ -72,7 +74,8 @@ if __name__ == '__main__':
     fscore_rb = fscore(gt_labels, predictions_rb)
 
     # Run experiment for hmm change detector
-    hmm_det = HMMChangeDetector(G1, use_latlon=False)
+    # hmm_det = HMMChangeDetector(G1, use_latlon=False)
+    hmm_det = HMMChangeDetectorFast(G1, num_cpu=args.num_cpu_hmm, use_latlon=False)
     G2_pred_hmm = hmm_det.forward(T2['T'])
     plot_graph(G2_pred_hmm, use_weights=True, figsize=(10,10), savename=os.path.join(results_folder, 'heatmap_hmm'), show_img=False)
     scores_hmm = predicted_labels(G2_pred_hmm)
