@@ -16,6 +16,7 @@ if __name__ == '__main__':
 
 
     parser.add_argument('--exp_name', default='high_sample', type=str, help='Name of experiment')
+    parser.add_argument('--results_dir', default='results', type=str, help='Folder in which to store results')
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
     parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
@@ -29,9 +30,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Create folder for experimental results
-    if not os.path.exists('results'):
-        os.mkdir('results')
-    results_folder = os.path.join('results', args.exp_name)
+    if not os.path.exists(args.results_dir):
+        os.mkdir(args.results_dir)
+    results_folder = os.path.join(args.results_dir, args.exp_name)
     if not os.path.exists(results_folder):
         os.mkdir(results_folder)
     
@@ -60,7 +61,6 @@ if __name__ == '__main__':
     scores_rand = predicted_labels(G2_pred_rand)
     p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_logscale_random'))
     p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_random'), log_scale=False)
-    # predictions_rand = {k: int(scores_rand[k] == 0) for k in gt_labels}
     fscore_rand = fscore(gt_labels, scores_rand)
 
     # Run experiment for rulebased change detector
@@ -74,7 +74,6 @@ if __name__ == '__main__':
     fscore_rb = fscore(gt_labels, predictions_rb)
 
     # Run experiment for hmm change detector
-    # hmm_det = HMMChangeDetector(G1, use_latlon=False)
     hmm_det = HMMChangeDetectorFast(G1, num_cpu=args.num_cpu_hmm, use_latlon=False)
     G2_pred_hmm = hmm_det.forward(T2['T'])
     plot_graph(G2_pred_hmm, use_weights=True, figsize=(10,10), savename=os.path.join(results_folder, 'heatmap_hmm'), show_img=False)
