@@ -171,4 +171,40 @@ def fscore_vs_noise(folder='./dummy_results/', savename=None):
     else:
         plt.show()
 
-fscore_vs_noise('./results/', savename='./results/fscore_vs_noise')
+def prauc_vs_noise(folder='./dummy_results/', savename=None):
+    folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
+    results = []
+    for f in folders:
+        results_folder = os.path.join(folder, f)
+        files = [file for file in os.listdir(results_folder) if '.hdf5' in file]
+        if len(files) != 1:
+            raise ValueError(f"Expected one results file (hdf5) in {results_folder}, but found {len(files)}: {files}")
+        results_file = os.path.join(results_folder, files[0])
+        with open(results_file, 'rb') as handle:
+            result = pickle.load(handle)
+        results.append(result)
+        
+    results = sorted(results, key=lambda res: res['experiment_name'], reverse=False)
+    results = [results[-1], *results[0:-1]]
+    
+    fscores_random = []
+    fscores_rulebased = []
+    fscores_hmm = []
+    for result in results:
+        fscores_random.append(result['results']['random']['pr_auc'])
+        fscores_rulebased.append(result['results']['rulebased']['pr_auc'])
+        fscores_hmm.append(result['results']['hmm']['pr_auc'])
+    
+    x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
+    
+    plt.plot(x, fscores_random, '-o')
+    plt.plot(x, fscores_rulebased, '-o')
+    plt.plot(x, fscores_hmm, '-o')
+    plt.ylabel('PR-AUC')
+    plt.title('Noise vs PR-AUC')
+    plt.legend(['Random', 'Rule-based', 'HMM'])
+    
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+    else:
+        plt.show()
