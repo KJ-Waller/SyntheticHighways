@@ -170,3 +170,5 @@ def fscore_vs_noise(folder='./dummy_results/', savename=None):
         plt.savefig(f'{savename}.png')
     else:
         plt.show()
+
+fscore_vs_noise('./results/', savename='./results/fscore_vs_noise')
