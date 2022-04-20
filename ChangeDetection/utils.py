@@ -202,17 +202,17 @@ def filter_bbox_idxs(points, bbox):
     inidx = np.all(np.logical_and(ll <= points, points <= ur), axis=1)
     return inidx
 
-def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0001):
+def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0008):
     lat_min, lat_max, lon_min, lon_max = bbox
 
     G1, G2 = G1.copy(), G2.copy()
     for node in G1.copy().nodes(data=True):
         if node[1]['lat'] < (lat_min-map_offset) or node[1]['lat'] > (lat_max+map_offset) \
-        or node[1]['lon'] < (lon_min-map_offset) or node[1]['lon'] > (lon_max+map_offset):
+        or node[1]['lon'] < (lon_min-(3*map_offset)) or node[1]['lon'] > (lon_max+(3*map_offset)):
             G1.remove_node(node[0])
     for node in G2.copy().nodes(data=True):
         if node[1]['lat'] < (lat_min-map_offset) or node[1]['lat'] > (lat_max+map_offset) \
-        or node[1]['lon'] < (lon_min-map_offset) or node[1]['lon'] > (lon_max+map_offset):
+        or node[1]['lon'] < (lon_min-(3*map_offset)) or node[1]['lon'] > (lon_max+(3*map_offset)):
             G2.remove_node(node[0])
 
     T1_new = []
