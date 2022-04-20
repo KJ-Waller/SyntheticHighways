@@ -8,14 +8,14 @@ class HMMChangeDetector(object):
     def __init__(self, G1, use_latlon=True, max_dist=1000, max_dist_init=1000, 
                 min_prob_norm=0.001, non_emitting_states=True,
                 non_emitting_length_factor=0.75, obs_noise=50, 
-                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False):
+                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False, avoid_goingback=True):
 
         # Initialize global variables/parameters
         self.use_latlon = use_latlon
         self.max_dist, self.max_dist_init, self.min_prob_norm, self.non_emitting_length_factor, \
-            self.obs_noise, self.obs_noise_ne, self.dist_noise, self.non_emitting_edgeid, self.non_emitting_states \
+            self.obs_noise, self.obs_noise_ne, self.dist_noise, self.non_emitting_edgeid, self.non_emitting_states, self.avoid_goingback \
              = max_dist, max_dist_init, min_prob_norm, non_emitting_length_factor, obs_noise, obs_noise_ne, \
-                 dist_noise, non_emitting_edgeid, non_emitting_states
+                 dist_noise, non_emitting_edgeid, non_emitting_states, avoid_goingback
 
         # Setup HMM map and matcher
         self.G1 = G1.copy()
@@ -29,7 +29,7 @@ class HMMChangeDetector(object):
 
         self.hmm_matcher = DistanceMatcher(self.hmm_map, max_dist=self.max_dist, max_dist_init=self.max_dist_init, \
             min_prob_norm=self.min_prob_norm, non_emitting_states=self.non_emitting_states, non_emitting_length_factor=self.non_emitting_length_factor,\
-                obs_noise=self.obs_noise, obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid)
+                obs_noise=self.obs_noise, obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid, avoid_goingback=self.avoid_goingback)
     
     def format_map_hmm(self, G):
         graph = {node[0]: ((node[1]['lat'], node[1]['lon']), list(nx.all_neighbors(G, node[0]))) for node in G.nodes(data=True)}
