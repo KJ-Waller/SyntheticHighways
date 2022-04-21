@@ -12,7 +12,7 @@ class HMMChangeDetectorFast(object):
     def __init__(self, G1, num_cpu=None, use_latlon=True, max_dist=1000, max_dist_init=1000, 
                 min_prob_norm=0.001, non_emitting_states=True,
                 non_emitting_length_factor=0.75, obs_noise=50, 
-                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False):
+                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False, avoid_goingback=True):
         
         # Initialize global variables/parameters
         self.use_latlon = use_latlon
