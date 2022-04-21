@@ -592,12 +592,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
-    parser.add_argument('--noise', default=False, type=bool, help='Add noise to trajectories')
+    parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
+    parser.add_argument('--preprocess_dataset', default=True, action='store_true', help='Whether to preprocess the entire dataset')
 
     args = parser.parse_args()
 
+    if args.preprocess_dataset:
+        print('Processing no noise dataset')
+        dataset = SHDataset(noise=False, dataset_dir=args.dataset_dir, noise_config=0)
+        for i in range(4):
+            print(f'Processing dataset w/ noise config {i}')
+            dataset = SHDataset(noise=True, dataset_dir=args.dataset_dir, noise_config=i)
 
     dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config)
     G1,T1,G2,T2 = dataset.read_snapshots(0, bbox=(52.355, 52.365, 4.860, 4.900))
