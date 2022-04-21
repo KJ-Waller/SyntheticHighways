@@ -5,7 +5,6 @@ from utils import *
 from metrics import *
 from models.random import RandomDetector
 from models.rulebased import RulebasedDetector
-# from models.hmm import HMMChangeDetector
 from models.hmm_fast import HMMChangeDetectorFast
 import random
 import pickle5 as pickle
