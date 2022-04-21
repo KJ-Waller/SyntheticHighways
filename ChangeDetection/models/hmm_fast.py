@@ -35,7 +35,7 @@ class HMMChangeDetectorFast(object):
         hmm_det = HMMChangeDetector(self.G1, use_latlon=self.use_latlon, max_dist=self.max_dist, max_dist_init=self.max_dist_init,
                                     min_prob_norm=self.min_prob_norm, non_emitting_states=self.non_emitting_states,
                                     non_emitting_length_factor=self.non_emitting_length_factor, obs_noise=self.obs_noise,
-                                    obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid
+                                    obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid,
                                     avoid_goingback=self.avoid_goingback, enable_pbar=False)
         return hmm_det.forward(T2)
 
