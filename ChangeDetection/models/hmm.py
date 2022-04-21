@@ -8,7 +8,8 @@ class HMMChangeDetector(object):
     def __init__(self, G1, use_latlon=True, max_dist=1000, max_dist_init=1000, 
                 min_prob_norm=0.001, non_emitting_states=True,
                 non_emitting_length_factor=0.75, obs_noise=50, 
-                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False, avoid_goingback=True):
+                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False, avoid_goingback=True,
+                enable_pbar=True):
 
         # Initialize global variables/parameters
         self.use_latlon = use_latlon
@@ -16,7 +17,8 @@ class HMMChangeDetector(object):
             self.obs_noise, self.obs_noise_ne, self.dist_noise, self.non_emitting_edgeid, self.non_emitting_states, self.avoid_goingback \
              = max_dist, max_dist_init, min_prob_norm, non_emitting_length_factor, obs_noise, obs_noise_ne, \
                  dist_noise, non_emitting_edgeid, non_emitting_states, avoid_goingback
-
+        self.enable_pbar = enable_pbar
+        
         # Setup HMM map and matcher
         self.G1 = G1.copy()
         graph = self.format_map_hmm(self.G1)
@@ -42,12 +44,16 @@ class HMMChangeDetector(object):
         
     def forward(self, T2):
         G_edge_scores = {}
-        pbar = tqdm(enumerate(T2))
+        if self.enable_pbar:
+            pbar = tqdm(enumerate(T2))
+        else:
+            pbar = enumerate(T2)
         
         no_matches = []
         
         for i, t in pbar:
-            pbar.set_description(desc=f"Map matching trajectory: {i}/{len(T2)}")
+            if self.enable_pbar:
+                pbar.set_description(desc=f"Map matching trajectory: {i}/{len(T2)}")
             selected_edges = self.map_match_trajectory(t)
             if len(selected_edges) == 0:
                 no_matches.append(t)

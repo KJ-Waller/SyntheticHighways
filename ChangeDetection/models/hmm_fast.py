@@ -3,7 +3,6 @@ from leuvenmapmatching.map.inmem import InMemMap
 from leuvenmapmatching import visualization as mmviz
 import networkx as nx
 from tqdm import tqdm
-from timebudget import timebudget
 from multiprocessing import Pool
 from models.hmm import HMMChangeDetector
 import os
@@ -37,7 +36,7 @@ class HMMChangeDetectorFast(object):
                                     min_prob_norm=self.min_prob_norm, non_emitting_states=self.non_emitting_states,
                                     non_emitting_length_factor=self.non_emitting_length_factor, obs_noise=self.obs_noise,
                                     obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid
-                                    avoid_goingback=self.avoid_goingback)
+                                    avoid_goingback=self.avoid_goingback, enable_pbar=False)
         return hmm_det.forward(T2)
 
     def forward(self, T2):
@@ -47,8 +46,16 @@ class HMMChangeDetectorFast(object):
         # Create processes pool and input
         pool = Pool(self.num_cpu)
 
-        # Run starmap
-        results = pool.map(self.parallel_forward, T2)
+        # Run map
+        results = []
+        pbar = tqdm(pool.imap_unordered(self.parallel_forward, T2), total=len(T2))
+        pbar.set_description('Map matching trajectories')
+        for result in pbar:
+            results.append(result)
+        pool.close()
+        pool.join()
+        pbar.close()
+        
         combined_weights = {}
         for G1 in results:
             for edge in G1.edges(data=True):
@@ -67,8 +74,7 @@ if __name__ == '__main__':
     from utils import *
 
     dataset = SHDataset(noise=False)
-    G1,T1,G2,T2 = dataset.read_snapshots(0)
-    G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2, (52.355, 52.365, 4.860, 4.900))
+    G1,T1,G2,T2 = dataset.read_snapshots(0, bbox=(52.355, 52.365, 4.860, 4.900))
 
     T1['T'] = random.sample(T1['T'], k=100)
     T2['T'] = random.sample(T2['T'], k=100)
