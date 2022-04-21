@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve as prcurve
 from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score, recall_score, auc, roc_curve, roc_auc_score
+from sklearn.metrics import auc, roc_curve, roc_auc_score
 import networkx as nx
 import numpy as np
 import os
 import pickle5 as pickle
 
 def fscore(gt_labels, pred_labels):
+    """
+    Calculates f score between ground truth labels and predicted labels
+    """
     labels = []
     predictions = []
     for key in gt_labels.keys():
@@ -35,11 +38,17 @@ def groundtruth_labels(G1,G2):
     return sorted_labels
 
 def predicted_labels(G_pred):
+    """
+    Extracts the predicted labels from a networkx graph
+    """
     scores = nx.get_edge_attributes(G_pred, 'weight')
     sorted_scores = {edge: scores[edge] for edge in sorted(scores)}
     return sorted_scores
     
 def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None):
+    """
+    Plots the precision recall curve given ground truth labels and predicted scores
+    """
     plt.clf()
     predictions = {k: int(pred_scores[k] == 0) for k in gt_labels}
 
@@ -70,33 +79,10 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None):
     
     return p, r, ts, pr_auc
 
-def ROCCurve(gt_labels, pred_scores):
-    gt_scores = np.array(list(gt_labels.values()))
-    pred_scores = np.array(list(pred_scores.values()))
-    fpr, tpr, ts = roc_curve(gt_scores, pred_scores)
-    auroc = roc_auc_score(gt_scores, pred_scores)
-
-    plt.plot(fpr, tpr)
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title(f'ROC Curve (AUROC: {round(auroc, 2)})')
-    plt.show()
-
-    return tpr, fpr, auroc
-
-def ROCCombine(fprs, tprs, aurocs, labels):
-    for fpr, tpr in zip(fprs, tprs):
-        plt.plot(fpr, tpr)
-
-    labels = [f'{label} (auc: {round(auroc, 2)})' for label, auroc in list(zip(labels, aurocs))]
-    plt.legend(labels)
-
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
-    plt.show()
-
 def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, savename=None):
+    """
+    Combines the precision and recall curves for multiple methods, plots labels and AUCs
+    """
     plt.clf()
     if log_scale:
         ax = plt.gca()
@@ -134,6 +120,9 @@ def prune_edges(G, threshold):
     return G
 
 def fscore_vs_noise(folder='./dummy_results/', savename=None):
+    """
+    Plots noise vs fscore, by reading results from the given folder
+    """
     folders = sorted(os.listdir(folder))
     results = []
     for f in folders:
@@ -172,6 +161,9 @@ def fscore_vs_noise(folder='./dummy_results/', savename=None):
         plt.show()
 
 def prauc_vs_noise(folder='./dummy_results/', savename=None):
+    """
+    Plots noise vs precision and recall AUC given folder containing results over multiple noise configurations
+    """
     folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
     results = []
     for f in folders:
