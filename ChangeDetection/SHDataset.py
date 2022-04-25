@@ -1,7 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool
-from importlib_metadata import itertools
+import itertools
 from utils import *
 import pickle5 as pickle
 from tqdm import tqdm
