@@ -43,7 +43,7 @@ if __name__ == '__main__':
     if args.n_traj != 0:
         T1['T'] = random.sample(T1['T'], k=args.n_traj)
         T2['T'] = random.sample(T2['T'], k=args.n_traj)
-    print(f'Sampled {args.n_traj}/{total_t2} trajectories for T2')
+    print(f"Sampled {len(T2['T'])}/{total_t2} trajectories for T2")
 
     # Save figures from bbox showing raw traces and changes
     plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(10,10), savename=os.path.join(results_folder, 'G1T2'), show_img=False)

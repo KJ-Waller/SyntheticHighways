@@ -202,7 +202,7 @@ def filter_bbox_idxs(points, bbox):
     inidx = np.all(np.logical_and(ll <= points, points <= ur), axis=1)
     return inidx
 
-def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0008):
+def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0000):
     lat_min, lat_max, lon_min, lon_max = bbox
 
     G1, G2 = G1.copy(), G2.copy()

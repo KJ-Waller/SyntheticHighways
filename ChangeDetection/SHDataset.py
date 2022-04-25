@@ -41,7 +41,7 @@ dataset directory and processes them to pickle files per map and per noise confi
 class SHDataset(object):
     def __init__(self, dataset_dir='./dataset/', split_threshold=200, ref_coord=(52.356758, 4.894004),
                 coord_scale_factor=1, noise=True, noise_config=0, save_cleaned_data=True, min_traj_len=4,
-                traj_trim_size=2):
+                traj_trim_size=2, multiprocessing=False):
         """
         Initializes the dataset
 
@@ -67,6 +67,7 @@ class SHDataset(object):
         self.pnoise_shift = 0.05
         sigmas = [0.0000125+(i*0.000025) for i in range(4)]
         thetas = sigmas
+        self.multiprocessing = multiprocessing
         
         self.noise_mu = np.array([0,0])
         self.noise_sigma = sigmas[noise_config]
@@ -107,9 +108,10 @@ class SHDataset(object):
                     T2['T'] = self.add_noise_parallel(T2['T'])
 
                     with open(cleaned_fname_noise, 'wb') as handle:
-                        print(f'Writing snapshots to pickle file: {cleaned_fname}')
+                        print(f'Writing snapshots to pickle file: {cleaned_fname_noise}')
                         pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+                self.maps[i]['cleaned_data'] = cleaned_fname_noise
             else:
                 self.maps[i]['cleaned_data'] = cleaned_fname
 
@@ -194,16 +196,23 @@ class SHDataset(object):
         elif len(traj_fnames) > os.cpu_count():
             raise NotImplementedError(f'There are more trajectory batches than there are cpu cores. This feature has not yet been implemented')
 
-        results = []
-        pbar = tqdm(pool.imap_unordered(self.parse_trajectories, traj_fnames), total=len(traj_fnames))
-        pbar.set_description('Reading trajectories')
-        for result in pbar:
-            results.append(result)
-        pool.close()
-        pool.join()
-        pbar.close()
+        if self.multiprocessing:
+            results = []
+            pbar = tqdm(pool.imap_unordered(self.parse_trajectories, traj_fnames), total=len(traj_fnames))
+            pbar.set_description('Reading trajectories')
+            for result in pbar:
+                results.append(result)
+            pool.close()
+            pool.join()
+            pbar.close()
+            trajectories = list(itertools.chain.from_iterable(results))
+        else:
+            trajectories = []
+            pbar = tqdm(traj_fnames)
+            pbar.set_description('Reading trajectories')
+            for fname in pbar:
+                trajectories = [*trajectories, *self.parse_trajectories(fname)]
 
-        trajectories = list(itertools.chain.from_iterable(results))
         return trajectories
 
     def parse_paths_parallel(self, path_fnames):
@@ -217,16 +226,24 @@ class SHDataset(object):
         elif len(path_fnames) > os.cpu_count():
             raise NotImplementedError(f'There are more path batches than there are cpu cores. This feature has not yet been implemented')
 
-        results = []
-        pbar = tqdm(pool.imap_unordered(self.parse_paths, path_fnames), total=len(path_fnames))
-        pbar.set_description('Reading paths')
-        for result in pbar:
-            results.append(result)
-        pool.close()
-        pool.join()
-        pbar.close()
+        if self.multiprocessing:
+            results = []
+            pbar = tqdm(pool.imap_unordered(self.parse_paths, path_fnames), total=len(path_fnames))
+            pbar.set_description('Reading paths')
+            for result in pbar:
+                results.append(result)
+            pool.close()
+            pool.join()
+            pbar.close()
 
-        paths = dict(itertools.chain.from_iterable(map(dict.items, results)))
+            paths = dict(itertools.chain.from_iterable(map(dict.items, results)))
+        else:
+            paths = []
+            pbar = tqdm(path_fnames)
+            pbar.set_description('Reading paths')
+            for fname in pbar:
+                paths = [*paths, self.parse_paths(fname)]
+
         return paths
 
                 
@@ -507,30 +524,43 @@ class SHDataset(object):
         """
         Adds noise to trajectories using multiple threads
         """
-        T_batches = np.array_split(T, os.cpu_count())
-        pool = Pool(os.cpu_count())
 
-        results = []
-        pbar = tqdm(pool.imap_unordered(self.add_noise, T_batches), total=len(T_batches))
-        pbar.set_description('Adding noise to trajectories')
-        for result in pbar:
-            results.append(result)
+        if self.multiprocessing:
+            T_batches = np.array_split(T, os.cpu_count())
+            pool = Pool(os.cpu_count())
+            results = []
+            pbar = tqdm(pool.imap_unordered(self.add_noise, T_batches), total=len(T_batches))
+            pbar.set_description('Adding noise to trajectories')
+            for result in pbar:
+                results.append(result)
 
-        pool.close()
-        pool.join()
-        pbar.close()
-        trajectories_w_noise = list(itertools.chain.from_iterable(results))
+            pool.close()
+            pool.join()
+            pbar.close()
+            trajectories_w_noise = list(itertools.chain.from_iterable(results))
+        else:
+            trajectories_w_noise = self.add_noise(T, pbar=True)
+
         return trajectories_w_noise
 
-    def add_noise(self, T):
+    def add_noise(self, T, pbar=False):
         """
         Adds noise to trajectories
         """
-        new_T = []
-        
-        for t in T:
-            new_T.append(self.add_noise_t(t))
-        return new_T
+        if pbar:
+            new_T = []
+            pbar = tqdm(T)
+            pbar.set_description('Adding noise to trajectories')
+            for t in pbar:
+                new_T.append(self.add_noise_t(t))
+            return new_T
+
+        else:
+            new_T = []
+            
+            for t in T:
+                new_T.append(self.add_noise_t(t))
+            return new_T
 
     def add_noise_t(self, t):
         """
