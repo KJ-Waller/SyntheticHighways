@@ -219,26 +219,51 @@ def prauc_vs_noise(folder='./dummy_results/', savename=None):
     else:
         plt.show()
 
-def compare_experiments(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
+def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
     fscores_random, fscores_rb, fscores_hmm = read_fscores_experiment(folders[0])
-    plt.plot(x, fscores_random, '-o', color='dodgerblue')
-    plt.plot(x, fscores_rb, '-o', color='orange')
-    plt.plot(x, fscores_hmm, '-o', color='green')
-
-
-    fscores_random, fscores_rb, fscores_hmm = read_fscores_experiment(folders[1])
     plt.plot(x, fscores_random, '--o', color='dodgerblue')
     plt.plot(x, fscores_rb, '--o', color='orange')
     plt.plot(x, fscores_hmm, '--o', color='green')
 
 
+    fscores_random, fscores_rb, fscores_hmm = read_fscores_experiment(folders[1])
+    plt.plot(x, fscores_random, '-o', color='dodgerblue')
+    plt.plot(x, fscores_rb, '-o', color='orange')
+    plt.plot(x, fscores_hmm, '-o', color='green')
+
+
+    plt.title('Noise vs F-Score')
     plt.legend(['Random', 'Rule-based', 'HMM'])
 
     plt.ylabel('F-Score')
+    plt.ylim(0, 1)
+
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+    else:
+        plt.show()
+
+def compare_experiments_prauc(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
+    x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
+    praucs_random, praucs_rb, praucs_hmm = read_prauc_experiment(folders[0])
+    plt.plot(x, praucs_random, '--o', color='dodgerblue')
+    plt.plot(x, praucs_rb, '--o', color='orange')
+    plt.plot(x, praucs_hmm, '--o', color='green')
 
 
-    
+    praucs_random, praucs_rb, praucs_hmm = read_prauc_experiment(folders[1])
+    plt.plot(x, praucs_random, '-o', color='dodgerblue')
+    plt.plot(x, praucs_rb, '-o', color='orange')
+    plt.plot(x, praucs_hmm, '-o', color='green')
+
+
+    plt.title('Noise vs PR-AUC')
+    plt.legend(['Random', 'Rule-based', 'HMM'])
+
+    plt.ylabel('PR-AUC')
+    plt.ylim(0, 1)
+
     if savename is not None:
         plt.savefig(f'{savename}.png')
     else:
@@ -307,7 +332,7 @@ def recalc_pr_scores(folder):
 
         
 
-
+# recalc_pr_scores(folder='results_high_sample_10000')
 # recalc_pr_scores(folder='results_high_sample_v3')
 # recalc_pr_scores(folder='results_high_sample')
 # recalc_pr_scores(folder='results_high_sample_coveragepatch')
@@ -315,4 +340,5 @@ def recalc_pr_scores(folder):
 
 
 # compare_experiments()
-# compare_experiments(savename='fscore_cleaned_vs_dirty')
+# compare_experiments_fscore(folders=[ 'results_high_sample_10000_tuned', 'results_high_sample_10000'], savename='fscore_tuned_vs_untuned')
+# compare_experiments_prauc(folders=['results_high_sample_10000', 'results_high_sample_10000_tuned'], savename='prauc_tuned_vs_untuned')
