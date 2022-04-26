@@ -145,6 +145,8 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, node_siz
             nx.draw_networkx_edges(G, node_pos, width=edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
 
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    ax.set_xlabel('longitude')
+    ax.set_ylabel('latitude')
     plt.plot()
     if show_img:
         plt.show()
