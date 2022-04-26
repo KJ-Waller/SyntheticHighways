@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve as prcurve
 from sklearn.metrics import f1_score
@@ -119,11 +120,8 @@ def prune_edges(G, threshold):
 
     return G
 
-def fscore_vs_noise(folder='./dummy_results/', savename=None):
-    """
-    Plots noise vs fscore, by reading results from the given folder
-    """
-    folders = sorted(os.listdir(folder))
+def read_fscores_experiment(folder):
+    folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
     results = []
     for f in folders:
         results_folder = os.path.join(folder, f)
@@ -145,6 +143,40 @@ def fscore_vs_noise(folder='./dummy_results/', savename=None):
         fscores_random.append(result['results']['random']['fscore'])
         fscores_rulebased.append(result['results']['rulebased']['fscore'])
         fscores_hmm.append(result['results']['hmm']['fscore'])
+    return fscores_random, fscores_rulebased, fscores_hmm
+
+def read_prauc_experiment(folder):
+    folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
+    results = []
+    for f in folders:
+        results_folder = os.path.join(folder, f)
+        files = [file for file in os.listdir(results_folder) if '.hdf5' in file]
+        if len(files) != 1:
+            raise ValueError(f"Expected one results file (hdf5) in {results_folder}, but found {len(files)}: {files}")
+        results_file = os.path.join(results_folder, files[0])
+        with open(results_file, 'rb') as handle:
+            result = pickle.load(handle)
+        results.append(result)
+        
+    results = sorted(results, key=lambda res: res['experiment_name'], reverse=False)
+    results = [results[-1], *results[0:-1]]
+    
+    prauc_random = []
+    prauc_rulebased = []
+    prauc_hmm = []
+    for result in results:
+        prauc_random.append(result['results']['random']['pr_auc'])
+        prauc_rulebased.append(result['results']['rulebased']['pr_auc'])
+        prauc_hmm.append(result['results']['hmm']['pr_auc'])
+
+    return prauc_random, prauc_rulebased, prauc_hmm
+
+def fscore_vs_noise(folder='./dummy_results/', savename=None):
+    """
+    Plots noise vs fscore, by reading results from the given folder
+    """
+
+    fscores_random, fscores_rulebased, fscores_hmm = read_fscores_experiment(folder)
     
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
     
@@ -164,34 +196,14 @@ def prauc_vs_noise(folder='./dummy_results/', savename=None):
     """
     Plots noise vs precision and recall AUC given folder containing results over multiple noise configurations
     """
-    folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
-    results = []
-    for f in folders:
-        results_folder = os.path.join(folder, f)
-        files = [file for file in os.listdir(results_folder) if '.hdf5' in file]
-        if len(files) != 1:
-            raise ValueError(f"Expected one results file (hdf5) in {results_folder}, but found {len(files)}: {files}")
-        results_file = os.path.join(results_folder, files[0])
-        with open(results_file, 'rb') as handle:
-            result = pickle.load(handle)
-        results.append(result)
-        
-    results = sorted(results, key=lambda res: res['experiment_name'], reverse=False)
-    results = [results[-1], *results[0:-1]]
-    
-    fscores_random = []
-    fscores_rulebased = []
-    fscores_hmm = []
-    for result in results:
-        fscores_random.append(result['results']['random']['pr_auc'])
-        fscores_rulebased.append(result['results']['rulebased']['pr_auc'])
-        fscores_hmm.append(result['results']['hmm']['pr_auc'])
+
+    prauc_random, prauc_rulebased, prauc_hmm = read_prauc_experiment(folder)
     
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
     
-    plt.plot(x, fscores_random, '-o')
-    plt.plot(x, fscores_rulebased, '-o')
-    plt.plot(x, fscores_hmm, '-o')
+    plt.plot(x, prauc_random, '-o')
+    plt.plot(x, prauc_rulebased, '-o')
+    plt.plot(x, prauc_hmm, '-o')
     plt.ylabel('PR-AUC')
     plt.title('Noise vs PR-AUC')
     plt.legend(['Random', 'Rule-based', 'HMM'])
@@ -200,3 +212,33 @@ def prauc_vs_noise(folder='./dummy_results/', savename=None):
         plt.savefig(f'{savename}.png')
     else:
         plt.show()
+
+def compare_experiments(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
+    x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
+    fscores_random, fscores_rb, fscores_hmm = read_fscores_experiment(folders[0])
+    plt.plot(x, fscores_random, '-o', color='dodgerblue')
+    plt.plot(x, fscores_rb, '-o', color='orange')
+    plt.plot(x, fscores_hmm, '-o', color='green')
+
+
+    fscores_random, fscores_rb, fscores_hmm = read_fscores_experiment(folders[1])
+    plt.plot(x, fscores_random, '--o', color='dodgerblue')
+    plt.plot(x, fscores_rb, '--o', color='orange')
+    plt.plot(x, fscores_hmm, '--o', color='green')
+
+
+    plt.legend(['Random', 'Rule-based', 'HMM'])
+
+    plt.ylabel('F-Score')
+
+
+    
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+    else:
+        plt.show()
+
+
+
+compare_experiments()
+# compare_experiments(savename='fscore_cleaned_vs_dirty')
