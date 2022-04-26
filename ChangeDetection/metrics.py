@@ -308,10 +308,10 @@ def recalc_pr_scores(folder):
         
 
 
-recalc_pr_scores(folder='results_high_sample_v3')
-recalc_pr_scores(folder='results_high_sample')
-recalc_pr_scores(folder='results_high_sample_coveragepatch')
-recalc_pr_scores(folder='results_low_sample_coveragepatch')
+# recalc_pr_scores(folder='results_high_sample_v3')
+# recalc_pr_scores(folder='results_high_sample')
+# recalc_pr_scores(folder='results_high_sample_coveragepatch')
+# recalc_pr_scores(folder='results_low_sample_coveragepatch')
 
 
 # compare_experiments()
