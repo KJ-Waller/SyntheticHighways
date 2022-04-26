@@ -51,7 +51,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None):
     Plots the precision recall curve given ground truth labels and predicted scores
     """
     plt.clf()
-    predictions = {k: int(pred_scores[k] == 0) for k in gt_labels}
+    predictions = {k: pred_scores[k] for k in gt_labels}
 
     if log_scale:
         ax = plt.gca()
@@ -240,5 +240,5 @@ def compare_experiments(folders=['results_high_sample', 'results_high_sample_v3'
 
 
 
-compare_experiments()
+# compare_experiments()
 # compare_experiments(savename='fscore_cleaned_vs_dirty')
