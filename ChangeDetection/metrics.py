@@ -7,6 +7,10 @@ import networkx as nx
 import numpy as np
 import os
 import pickle5 as pickle
+from tqdm import tqdm
+
+from SHDataset import SHDataset
+from utils import compare_snapshots
 
 def fscore(gt_labels, pred_labels):
     """
@@ -186,6 +190,7 @@ def fscore_vs_noise(folder='./dummy_results/', savename=None):
     plt.ylabel('F-Score')
     plt.title('Noise vs F-Score')
     plt.legend(['Random', 'Rule-based', 'HMM'])
+    plt.ylim(0, 1)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
@@ -207,6 +212,7 @@ def prauc_vs_noise(folder='./dummy_results/', savename=None):
     plt.ylabel('PR-AUC')
     plt.title('Noise vs PR-AUC')
     plt.legend(['Random', 'Rule-based', 'HMM'])
+    plt.ylim(0, 1)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
@@ -238,6 +244,74 @@ def compare_experiments(folders=['results_high_sample', 'results_high_sample_v3'
     else:
         plt.show()
 
+def recalc_pr_scores(folder):
+    pbar = tqdm([os.path.join(folder, f) for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))])
+    for sf in pbar:
+        pbar.set_description(f'Recalulating results for folder: {sf}')
+        result_files = [os.path.join(sf,f) for f in os.listdir(sf) if 'hdf5' in f]
+        if len(result_files) != 1:
+            raise ValueError(f"Expected one results file (hdf5) in {sf}, but found {len(result_files)}: {result_files}")
+        res_fname = result_files[0]
+        with open(res_fname, 'rb') as handle:
+            result = pickle.load(handle)
+
+        # Read arguments from results and setup dataset
+        noise, noise_config, map_index, bbox = result['args']['noise'], result['args']['noise_config'], \
+            result['args']['map_index'], result['args']['bbox']
+        dataset = SHDataset(noise=noise, noise_config=noise_config)
+        G1,_,G2,_ = dataset.read_snapshots(map_index, bbox=bbox)
+        gt_labels = groundtruth_labels(G1, G2)
+
+        # Read scores for random method, recompute precision recall, overwrite old results
+        scores_rand = result['results']['random']['scores']
+        ps_rand, rs_rand, ts_rand, prauc_rand = PRCurve(gt_labels, scores_rand, log_scale=False, savename=os.path.join(sf, 'prcurve_random'))
+        PRCurve(gt_labels, scores_rand, log_scale=True, savename=os.path.join(sf, 'prcurve_logscale_random'))
+        result['results']['random']['precision'] = ps_rand
+        result['results']['random']['recall'] = rs_rand
+        result['results']['random']['thresholds'] = ts_rand
+        result['results']['random']['pr_auc'] = prauc_rand
+
+        # Read scores for rule-based method, recompute precision recall, overwrite old results
+        scores_rb = result['results']['rulebased']['scores']
+        ps_rb, rs_rb, ts_rb, prauc_rb = PRCurve(gt_labels, scores_rb, log_scale=False, savename=os.path.join(sf, 'prcurve_rulebased'))
+        PRCurve(gt_labels, scores_rb, log_scale=True, savename=os.path.join(sf, 'prcurve_logscale_rulebased'))
+        result['results']['rulebased']['precision'] = ps_rb
+        result['results']['rulebased']['recall'] = rs_rb
+        result['results']['rulebased']['thresholds'] = ts_rb
+        result['results']['rulebased']['pr_auc'] = prauc_rb
+
+        # Read scores for HMM method, recompute precision recall, overwrite old results
+        scores_hmm = result['results']['hmm']['scores']
+        ps_hmm, rs_hmm, ts_hmm, prauc_hmm = PRCurve(gt_labels, scores_hmm, log_scale=False, savename=os.path.join(sf, 'prcurve_hmm'))
+        PRCurve(gt_labels, scores_hmm, log_scale=True, savename=os.path.join(sf, 'prcurve_logscale_hmm'))
+        result['results']['hmm']['precision'] = ps_hmm
+        result['results']['hmm']['recall'] = rs_hmm
+        result['results']['hmm']['thresholds'] = ts_hmm
+        result['results']['hmm']['pr_auc'] = prauc_hmm
+
+        # Overwrite combined PR curves
+        PRCombine(ps=[ps_rand, ps_rb, ps_hmm], rs=[rs_rand, rs_rb, rs_hmm], aucs=[prauc_rand, prauc_rb, prauc_hmm]\
+                    ,labels=['Random', 'Rule-based', 'HMM'], log_scale=False, savename=os.path.join(sf, 'prcurve_combined'))
+        PRCombine(ps=[ps_rand, ps_rb, ps_hmm], rs=[rs_rand, rs_rb, rs_hmm], aucs=[prauc_rand, prauc_rb, prauc_hmm]\
+                    ,labels=['Random', 'Rule-based', 'HMM'], log_scale=True, savename=os.path.join(sf, 'prcurve_logscale_combined'))
+
+        # Resave pickled results
+        with open(res_fname, 'wb') as handle:
+            pickle.dump(result, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    plt.close()
+    fscore_vs_noise(folder=folder, savename=os.path.join(folder, 'fscore_vs_noise'))
+    plt.close()
+    prauc_vs_noise(folder=folder, savename=os.path.join(folder, 'prauc_vs_noise'))
+    plt.close()
+
+        
+
+
+recalc_pr_scores(folder='results_high_sample_v3')
+recalc_pr_scores(folder='results_high_sample')
+recalc_pr_scores(folder='results_high_sample_coveragepatch')
+recalc_pr_scores(folder='results_low_sample_coveragepatch')
 
 
 # compare_experiments()
