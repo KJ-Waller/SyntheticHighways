@@ -8,6 +8,7 @@ from models.rulebased import RulebasedDetector
 from models.hmm_fast import HMMChangeDetectorFast
 import random
 import pickle5 as pickle
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -25,8 +26,13 @@ if __name__ == '__main__':
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.355, 52.365, 4.860, 4.900], type=float, help='Set bounding box to train on map')
+    parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
 
     args = parser.parse_args()
+
+    # Set seed for random libraries
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     # Create folder for experimental results
     if not os.path.exists(args.results_dir):
