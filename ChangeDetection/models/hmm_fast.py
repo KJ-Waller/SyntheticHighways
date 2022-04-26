@@ -9,17 +9,19 @@ import os
 import numpy as np
 
 class HMMChangeDetectorFast(object):
-    def __init__(self, G1, num_cpu=None, use_latlon=True, max_dist=1000, max_dist_init=1000, 
-                min_prob_norm=0.001, non_emitting_states=True,
-                non_emitting_length_factor=0.75, obs_noise=50, 
-                obs_noise_ne=75, dist_noise=10, non_emitting_edgeid=False, avoid_goingback=True):
+    def __init__(self, G1, use_latlon=False, obs_noise=4, obs_noise_ne=4, max_dist_init=100,
+                max_dist=100, min_prob_norm=0.001, non_emitting_states=True, non_emitting_length_factor=0.75,
+                max_lattice_width=None, dist_noise=10, dist_noise_ne=10, restrained_ne=True, avoid_goingback=True,
+                num_cpu=12):
         
         # Initialize global variables/parameters
         self.use_latlon = use_latlon
-        self.max_dist, self.max_dist_init, self.min_prob_norm, self.non_emitting_length_factor, \
-            self.obs_noise, self.obs_noise_ne, self.dist_noise, self.non_emitting_edgeid, self.non_emitting_states, self.avoid_goingback \
-             = max_dist, max_dist_init, min_prob_norm, non_emitting_length_factor, obs_noise, obs_noise_ne, \
-                 dist_noise, non_emitting_edgeid, non_emitting_states, avoid_goingback
+        self.obs_noise, self.obs_noise_ne, self.max_dist_init, self.max_dist, self.min_prob_norm, \
+            self.non_emitting_states, self.non_emitting_length_factor, self.max_lattice_width, \
+            self.dist_noise, self.dist_noise_ne, self.restrained_ne, self.avoid_goingback \
+            = obs_noise, obs_noise_ne, max_dist_init, max_dist, min_prob_norm, non_emitting_states,\
+            non_emitting_length_factor, max_lattice_width, dist_noise, dist_noise_ne, restrained_ne, \
+            avoid_goingback
         
         if num_cpu is None:
             self.num_cpu = os.cpu_count()
@@ -32,11 +34,11 @@ class HMMChangeDetectorFast(object):
         self.G1 = G1.copy()
 
     def parallel_forward(self, T2):
-        hmm_det = HMMChangeDetector(self.G1, use_latlon=self.use_latlon, max_dist=self.max_dist, max_dist_init=self.max_dist_init,
-                                    min_prob_norm=self.min_prob_norm, non_emitting_states=self.non_emitting_states,
-                                    non_emitting_length_factor=self.non_emitting_length_factor, obs_noise=self.obs_noise,
-                                    obs_noise_ne=self.obs_noise_ne, dist_noise=self.dist_noise, non_emitting_edgeid=self.non_emitting_edgeid,
-                                    avoid_goingback=self.avoid_goingback, enable_pbar=False)
+        hmm_det = HMMChangeDetector(self.G1, use_latlon=self.use_latlon, obs_noise=self.obs_noise, obs_noise_ne=self.obs_noise_ne,
+                                    max_dist_init=self.max_dist_init, max_dist=self.max_dist, min_prob_norm=self.min_prob_norm,
+                                    non_emitting_states=self.non_emitting_states, non_emitting_length_factor=self.non_emitting_length_factor,
+                                    max_lattice_width=self.max_lattice_width, dist_noise=self.dist_noise, dist_noise_ne=self.dist_noise_ne,
+                                    restrained_ne=self.restrained_ne, avoid_goingback=self.avoid_goingback, enable_pbar=False)
         return hmm_det.forward(T2)
 
     def forward(self, T2):
