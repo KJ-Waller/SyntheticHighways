@@ -142,12 +142,14 @@ def read_fscores_experiment(folder):
     
     fscores_random = []
     fscores_rulebased = []
+    fscores_hist = []
     fscores_hmm = []
     for result in results:
         fscores_random.append(result['results']['random']['fscore'])
         fscores_rulebased.append(result['results']['rulebased']['fscore'])
+        fscores_hist.append(result['results']['histogram']['fscore'])
         fscores_hmm.append(result['results']['hmm']['fscore'])
-    return fscores_random, fscores_rulebased, fscores_hmm
+    return fscores_random, fscores_rulebased, fscores_hist, fscores_hmm
 
 def read_prauc_experiment(folder):
     folders = [f for f in sorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
@@ -167,29 +169,32 @@ def read_prauc_experiment(folder):
     
     prauc_random = []
     prauc_rulebased = []
+    prauc_hist = []
     prauc_hmm = []
     for result in results:
         prauc_random.append(result['results']['random']['pr_auc'])
         prauc_rulebased.append(result['results']['rulebased']['pr_auc'])
+        prauc_hist.append(result['results']['histogram']['pr_auc'])
         prauc_hmm.append(result['results']['hmm']['pr_auc'])
 
-    return prauc_random, prauc_rulebased, prauc_hmm
+    return prauc_random, prauc_rulebased, prauc_hist, prauc_hmm
 
 def fscore_vs_noise(folder='./dummy_results/', savename=None):
     """
     Plots noise vs fscore, by reading results from the given folder
     """
 
-    fscores_random, fscores_rulebased, fscores_hmm = read_fscores_experiment(folder)
+    fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
     
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
     
     plt.plot(x, fscores_random, '-o')
     plt.plot(x, fscores_rulebased, '-o')
+    plt.plot(x, fscores_hist, '-o')
     plt.plot(x, fscores_hmm, '-o')
     plt.ylabel('F-Score')
     plt.title('Noise vs F-Score')
-    plt.legend(['Random', 'Rule-based', 'HMM'])
+    plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
     if savename is not None:
@@ -202,16 +207,17 @@ def prauc_vs_noise(folder='./dummy_results/', savename=None):
     Plots noise vs precision and recall AUC given folder containing results over multiple noise configurations
     """
 
-    prauc_random, prauc_rulebased, prauc_hmm = read_prauc_experiment(folder)
+    prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
     
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
     
     plt.plot(x, prauc_random, '-o')
     plt.plot(x, prauc_rulebased, '-o')
+    plt.plot(x, prauc_hist, '-o')
     plt.plot(x, prauc_hmm, '-o')
     plt.ylabel('PR-AUC')
     plt.title('Noise vs PR-AUC')
-    plt.legend(['Random', 'Rule-based', 'HMM'])
+    plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
     if savename is not None:

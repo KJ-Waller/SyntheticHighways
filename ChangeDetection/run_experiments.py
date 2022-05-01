@@ -6,6 +6,7 @@ from metrics import *
 from models.random import RandomDetector
 from models.rulebased import RulebasedDetector
 from models.hmm_fast import HMMChangeDetectorFast
+from models.histogram import HistogramDetector
 import random
 import pickle5 as pickle
 import numpy as np
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
     parser.add_argument('--num_cpu_hmm', default=4, type=int, help='Number of CPUs to use for HMM change detector')
+    parser.add_argument('--histogram_dims', nargs='+', default=[200, 200], type=int, help='What dimensions to make the histogram for the Histogram based change detector')
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.355, 52.365, 4.860, 4.900], type=float, help='Set bounding box to train on map')
@@ -78,6 +80,21 @@ if __name__ == '__main__':
     predictions_rb = {k: int(scores_rb[k] == 0) for k in gt_labels}
     fscore_rb = fscore(gt_labels, predictions_rb)
 
+    # Run experiment for histogram based change detector
+    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims))
+    G2_pred_hist = hist_det.forward(T2['T'])
+    plot_graph(G2_pred_hist, use_weights=True, figsize=(10,10), savename=os.path.join(results_folder, 'heatmap_hist'), show_img=False)
+    scores_hist = predicted_labels(G2_pred_hist)
+    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_folder, 'prcurve_logscale_hist'))
+    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_folder, 'prcurve_hist'), log_scale=False)
+    threshold_hist = hist_det.find_threshold()
+    predictions_hist = {k: 0 if scores_hist[k] < threshold_hist else 1 for k in gt_labels}
+    fscore_hist = fscore(gt_labels, predictions_hist)
+
+    # TODO: Remove this
+    T1['T'] = random.sample(T1['T'], k=1000)
+    T2['T'] = random.sample(T2['T'], k=1000)
+
     # Run experiment for hmm change detector
     hmm_det = HMMChangeDetectorFast(G1, num_cpu=args.num_cpu_hmm, use_latlon=False)
     G2_pred_hmm = hmm_det.forward(T2['T'])
@@ -89,9 +106,9 @@ if __name__ == '__main__':
     fscore_hmm = fscore(gt_labels, predictions_hmm)
 
     # Create combine PR curve and save it
-    prs, rs, aucs = [p_rand, p_rb, p_hmm], [r_rand, r_rb, r_hmm], [pr_auc_rand, pr_auc_rb, pr_auc_hmm]
-    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'HMM'], savename=os.path.join(results_folder, 'prcurve_logscale_combined'), log_scale=True)
-    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'HMM'], savename=os.path.join(results_folder, 'prcurve_combined'), log_scale=False)
+    prs, rs, aucs = [p_rand, p_rb, p_hist, p_hmm], [r_rand, r_rb, r_hist, r_hmm], [pr_auc_rand, pr_auc_rb, pr_auc_hist, pr_auc_hmm]
+    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], savename=os.path.join(results_folder, 'prcurve_logscale_combined'), log_scale=True)
+    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], savename=os.path.join(results_folder, 'prcurve_combined'), log_scale=False)
 
     quant_results = {
         'experiment_name': args.exp_name,
@@ -118,6 +135,14 @@ if __name__ == '__main__':
                 'pr_auc': pr_auc_rb,
                 'scores': scores_rb,
                 'fscore': fscore_rb
+            },
+            'histogram': {
+                'precision': p_hist,
+                'recall': r_hist,
+                'thresholds': ts_hist,
+                'pr_auc': pr_auc_hist,
+                'scores': scores_hist,
+                'fscore': fscore_hist
             },
             'hmm': {
                 'precision': p_hmm,
