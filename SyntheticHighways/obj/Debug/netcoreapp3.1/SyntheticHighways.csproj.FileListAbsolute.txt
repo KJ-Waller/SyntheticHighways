@@ -16,3 +16,4 @@ C:\Users\KJW\source\repos\SyntheticHighways\SyntheticHighways\obj\Debug\netcorea
 C:\Users\KJW\source\repos\SyntheticHighways\SyntheticHighways\obj\Debug\netcoreapp3.1\SyntheticHighways.csproj.CopyComplete
 C:\Users\KJW\source\repos\SyntheticHighways\SyntheticHighways\obj\Debug\netcoreapp3.1\SyntheticHighways.dll
 C:\Users\KJW\source\repos\SyntheticHighways\SyntheticHighways\obj\Debug\netcoreapp3.1\SyntheticHighways.pdb
+C:\Users\KJW\source\repos\SyntheticHighways\SyntheticHighways\obj\Debug\netcoreapp3.1\SyntheticHighways.csproj.AssemblyReference.cache

@@ -183,6 +183,11 @@ namespace SyntheticHighways.TrajectoryExporter
                     timestamp.Value = vehTimestamps[key][locIdx];
                     loc.Attributes.Append(timestamp);
 
+                    // Add vehicle type element
+                    XmlAttribute vehicleType = vehDoc.CreateAttribute("VehicleType");
+                    vehicleType.Value = veh.Info.m_vehicleType.ToString();
+                    loc.Attributes.Append(vehicleType);
+
                     // Add velocity child element to location element with n1,n2,n3 as attributes (normalized x,y,z)
                     XmlElement velocity = vehDoc.CreateElement("Velocity");
                     XmlAttribute n1 = vehDoc.CreateAttribute("n1");
