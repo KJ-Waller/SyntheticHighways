@@ -37,6 +37,9 @@ if __name__ == '__main__':
     random.seed(args.seed)
 
     # Create folder for experimental results
+    if not os.path.exists('./experimental_results/'):
+        os.mkdir('./experimental_results/')
+    args.results_dir = os.path.join('./experimental_results/', args.results_dir)
     if not os.path.exists(args.results_dir):
         os.mkdir(args.results_dir)
     results_folder = os.path.join(args.results_dir, args.exp_name)
@@ -92,8 +95,8 @@ if __name__ == '__main__':
     fscore_hist = fscore(gt_labels, predictions_hist)
 
     # TODO: Remove this
-    T1['T'] = random.sample(T1['T'], k=1000)
-    T2['T'] = random.sample(T2['T'], k=1000)
+    # T1['T'] = random.sample(T1['T'], k=1000)
+    # T2['T'] = random.sample(T2['T'], k=1000)
 
     # Run experiment for hmm change detector
     hmm_det = HMMChangeDetectorFast(G1, num_cpu=args.num_cpu_hmm, use_latlon=False)
