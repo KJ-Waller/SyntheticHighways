@@ -1,1 +1,0 @@
-NOTE: Every location should contain basic information about vehicle to figure out which trajectories are incorrect/not car
