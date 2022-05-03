@@ -37,23 +37,43 @@ class HMMChangeDetector(object):
                                             restrained_ne=self.restrained_ne, avoid_goingback=self.avoid_goingback)
     
     def format_map_hmm(self, G):
+        """
+        Converts the map G into a format used by the HMM DistanceMatcher
+        """
         graph = {node[0]: ((node[1]['lat'], node[1]['lon']), list(nx.all_neighbors(G, node[0]))) for node in G.nodes(data=True)}
 
         return graph
     
     def format_traj_hmm(self, t):
+        """
+        Converts the path of a trajectory to a format used by the HMM DistanceMatcher
+        """
         path = [(p['lat'], p['lon']) for p in t]
         return path
         
     def forward(self, T2):
+        """
+        Infers the weights/scores for each edge in the map self.G1, given trajectories T2
+
+        -------
+        Params
+        -------
+        T2 : list
+            List of trajectories
+        """
+
         G_edge_scores = {}
+
+        # Setup progress bar
         if self.enable_pbar:
             pbar = tqdm(enumerate(T2))
         else:
             pbar = enumerate(T2)
         
+        # Keep track of what trajectories have no match found
         no_matches = []
         
+        # Loop through trajectories, and for each selected edge, decrement the weight of the edge
         for i, t in pbar:
             if self.enable_pbar:
                 pbar.set_description(desc=f"Map matching trajectory: {i}/{len(T2)}")
@@ -66,21 +86,27 @@ class HMMChangeDetector(object):
                     G_edge_scores[selected_edge] = -1
                 else:
                     G_edge_scores[selected_edge] -= 1
-                    
+        
+        # Set any missed edges to 0
         edges = set(self.G1.edges)
         selected_edges = set(G_edge_scores.keys())
         missing_edges = edges.difference(selected_edges)
         for edge in missing_edges:
             G_edge_scores[edge] = 0
         
+        # Set weight in self.G1 to the scores computed above
         nx.set_edge_attributes(self.G1, G_edge_scores, name='weight')
         
+        # Print out number of mismatched trajectories
         print(f'No matches for {len(no_matches)}/{len(T2)} trajectories')
         self.no_matches = no_matches
         
         return self.G1
     
     def map_match_trajectory(self, t):
+        """
+        Matches a single trajectory to a set of selected edges
+        """
         path = self.format_traj_hmm(t)
         if self.use_latlon:
             states, num = self.hmm_matcher.match(path)
