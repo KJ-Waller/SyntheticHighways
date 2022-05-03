@@ -11,15 +11,15 @@ class HistogramDetector(object):
         self.hist_dims = hist_dims
     
     def forward(self, T2):
-        hist, lat_bins, lon_bins = self.init_hist(self.bbox, self.hist_dims)
+        self.hist, lat_bins, lon_bins = self.init_hist(self.bbox, self.hist_dims)
         for t in tqdm(T2):
             for i, p in enumerate(t):
                 if i == 0:
                     continue
                 edge = [t[i-1], p]
-                hist = self.edge_to_hist(edge, hist, lat_bins, lon_bins)
-                
-        G_edge_scores = self.hist_to_scores(hist, lat_bins, lon_bins)
+                self.hist = self.edge_to_hist(edge, self.hist, lat_bins, lon_bins)
+
+        G_edge_scores = self.hist_to_scores(self.hist, lat_bins, lon_bins)
         
         nx.set_edge_attributes(self.G1, G_edge_scores, name='weight')
         
@@ -101,6 +101,7 @@ class HistogramDetector(object):
         elif len(possible_thresholds) == 0:
             threshold = -0.4
         else:
-            threshold = possible_thresholds[-1]
+            threshold = possible_thresholds[0]
+        print(f'Possible thresholds: {possible_thresholds}')
         return threshold
 
