@@ -203,6 +203,8 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False,
     plt.plot()
     if show_img:
         plt.show()
+    else:
+        return ax
     if savename is not None:
         fig1 = plt.gcf()
         fig1.savefig(f'{savename}.png')
