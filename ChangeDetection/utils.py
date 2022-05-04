@@ -95,7 +95,7 @@ def combine_graphs(G1,G2):
 
 def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, 
                 node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, 
-                show_img=True, fontsize=5, savename=None):
+                show_img=True, fontsize=5, equal_axis_ratio=False, savename=None):
     """
     Visualizes the NetworkX graph
 
@@ -122,6 +122,8 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False,
         Whether to show image or not
     fontsize : float
         What fontsize to use for labels, if enabled
+    equal_axis_ratio : boolean
+        Whether to plot x,y axes with equal aspect ratios
     savename : string
         Location and filename to save plot to. If set to None, it will not save anything
     """
@@ -196,6 +198,8 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False,
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     ax.set_xlabel('longitude')
     ax.set_ylabel('latitude')
+    if equal_axis_ratio:
+        ax.axis('equal')
     plt.plot()
     if show_img:
         plt.show()
