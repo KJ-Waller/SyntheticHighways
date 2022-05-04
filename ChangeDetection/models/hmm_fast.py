@@ -8,11 +8,28 @@ from models.hmm import HMMChangeDetector
 import os
 import numpy as np
 
+"""
+This class implements the parallelized version of the HMM change detector
+"""
+
 class HMMChangeDetectorFast(object):
     def __init__(self, G1, use_latlon=False, obs_noise=4, obs_noise_ne=4, max_dist_init=100,
                 max_dist=100, min_prob_norm=0.001, non_emitting_states=True, non_emitting_length_factor=0.75,
                 max_lattice_width=None, dist_noise=10, dist_noise_ne=10, restrained_ne=True, avoid_goingback=True,
                 num_cpu=12):
+
+        """
+        Initializes the parallelized HMM change detector
+
+        -------
+        Params
+        -------
+        G1 : NetworkX Graph
+            The graph of the map in the first snapshot (ie, before changes have occured)
+        use_latlon : boolean
+            Whether to use latitude/longitude or convert the coordinates to x,y coordinates
+
+        """
         
         # Initialize global variables/parameters
         self.use_latlon = use_latlon
@@ -34,6 +51,9 @@ class HMMChangeDetectorFast(object):
         self.G1 = G1.copy()
 
     def parallel_forward(self, T2):
+        """
+        Function which is parallelized over multiple threads
+        """
         hmm_det = HMMChangeDetector(self.G1, use_latlon=self.use_latlon, obs_noise=self.obs_noise, obs_noise_ne=self.obs_noise_ne,
                                     max_dist_init=self.max_dist_init, max_dist=self.max_dist, min_prob_norm=self.min_prob_norm,
                                     non_emitting_states=self.non_emitting_states, non_emitting_length_factor=self.non_emitting_length_factor,
@@ -42,13 +62,23 @@ class HMMChangeDetectorFast(object):
         return hmm_det.forward(T2)
 
     def forward(self, T2):
+        """
+        Infers the weights/scores for each edge in the map self.G1, given trajectories T2
+
+        -------
+        Params
+        -------
+        T2 : list
+            List of trajectories
+        """
+
         # Split trajectories into equal sized chunks given cpu count
         T2 = np.array_split(T2, self.num_cpu)
 
         # Create processes pool and input
         pool = Pool(self.num_cpu)
 
-        # Run map
+        # Run pool map
         results = []
         pbar = tqdm(pool.imap_unordered(self.parallel_forward, T2), total=len(T2))
         pbar.set_description('Map matching trajectories')

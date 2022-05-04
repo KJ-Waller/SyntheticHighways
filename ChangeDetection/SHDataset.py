@@ -493,6 +493,9 @@ class SHDataset(object):
         return new_T
 
     def to_wgs84(self, T):
+        """
+        Converts trajectories from game coordinates to wgs84 lat, lon coordinates
+        """
 
         i = 0
         x,y = zip(*[(t['lat'], t['lon']) for traj in T for t in traj])
