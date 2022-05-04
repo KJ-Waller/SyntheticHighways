@@ -143,7 +143,7 @@ class HistogramDetector(object):
         for i, (num, b) in enumerate(zip(n, bins)):
             if i == 0 or i == (len(n)-1):
                 continue
-            if num < n[i-1] and num < n[i+1]:
+            if (num <= n[i-1] and num < n[i+1]) or (num < n[i-1] and num <= n[i+1]):
                 possible_thresholds.append((b, num))
             
         if len(possible_thresholds) == 1:
@@ -151,8 +151,5 @@ class HistogramDetector(object):
         elif len(possible_thresholds) == 0:
             threshold = -0.4
         else:
-            lowest_idx = np.argmin([t[1] for t in possible_thresholds])
-            threshold = possible_thresholds[lowest_idx][0]
-        print(f'Possible thresholds: {possible_thresholds}')
+            threshold = possible_thresholds[0][0]
         return threshold
-
