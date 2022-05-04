@@ -124,7 +124,9 @@ class HMMChangeDetector(object):
         """
         Matches a single trajectory to a set of selected edges
         """
-        path = self.format_traj_hmm(t)
+        if len(t) < 6:
+            return []
+        path = self.format_traj_hmm(t[2:-2])
         if self.use_latlon:
             states, num = self.hmm_matcher.match(path)
         else:
