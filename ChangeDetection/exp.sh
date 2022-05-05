@@ -1,0 +1,3 @@
+python batch_experiments.py --exp_name alltraj_hmmtrim --n_traj 0 --num_cpu_hmm 16 --map_index 0 --bbox 52.355 52.365 4.860 4.900 --seed 42;
+python batch_experiments.py --exp_name 10000traj_hmmtrim --n_traj 10000 --num_cpu_hmm 16 --map_index 0 --bbox 52.355 52.365 4.860 4.900 --seed 42;
+python batch_experiments.py --exp_name 2000traj_hmmtrim --n_traj 2000 --num_cpu_hmm 16 --map_index 0 --bbox 52.355 52.365 4.860 4.900 --seed 42;
