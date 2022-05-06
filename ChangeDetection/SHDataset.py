@@ -10,7 +10,9 @@ import pyproj
 from geographiclib.geodesic import Geodesic
 import re
 import argparse
+import random
 geodesic = pyproj.Geod(ellps='WGS84')
+from datetime import datetime
 
 """
 This class implements Ornstein-Uhlenbeck process, for adding noise to trajectories
@@ -173,12 +175,9 @@ class SHDataset(object):
         """ 
         Main function for fetching data from a single snapshot
         """
-        if self.save_cleaned_data:
-            cleaned_fname = self.maps[i]['cleaned_data']
-            with open(cleaned_fname, 'rb') as handle:
-                G1,T1,G2,T2 = pickle.load(handle)
-        else:
-            G1,T1,G2,T2 = self.load_snapshots(i)
+        cleaned_fname = self.maps[i]['cleaned_data']
+        with open(cleaned_fname, 'rb') as handle:
+            G1,T1,G2,T2 = pickle.load(handle)
 
         if bbox is not None:
             G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2, bbox)
@@ -375,6 +374,12 @@ class SHDataset(object):
         traj_tree = ET.parse(xml_fname)
         traj_root = traj_tree.getroot()
         vehicles = traj_root[0]
+
+        # Create numpy trajectory datatype
+        trajectory_dtype = np.dtype([("lat", "f8"), ("lon", "f8"), ("speed", "f4"), 
+                                ("x", "f4"), ("y", "f4"), ("z", "f4"),
+                                ("heading", "f4"), ("timestamp", "datetime64[s]"), ("gt_segment", "int"),
+                                ("path_id", "int"), ("pathpos_idx", "int"), ("vehtype", 'S5')])
         
         # Convert XML formatted trajectories to list of lists of objects
         trajectories = []
@@ -382,58 +387,70 @@ class SHDataset(object):
             if vehicle.attrib['VehicleType'] != 'Car':
                 continue
                 
-            trajectory = []
-            for pos in vehicle:
+            trajectory = np.zeros(len(vehicle), dtype=trajectory_dtype)
+            t_len = 0
+
+            for i, pos in enumerate(vehicle):
 
                 # Check if vehicle type still is consistent
                 vehicle_type = pos.attrib['VehicleType']
-                if vehicle_type != 'Car':
-                    # If current position isn't from a car
-                    if len(trajectory) < self.min_traj_len:
-                        # If trajectory is too small, skip over it
-                        trajectory = []
-                        continue
-                    # Otherwise, add to trajectories
-                    else:
-                        trajectories.append(trajectory)
-                        continue
 
                 # Process current position info
                 lat, lon, speed = float(pos.attrib['x']), float(pos.attrib['z']), float(pos.attrib['speed'])
                 n1, n2, n3 = float(pos[0].attrib['n1']), float(pos[0].attrib['n2']), float(pos[0].attrib['n3'])
                 x, y, z = float(pos[1].attrib['x']), float(pos[1].attrib['y']), float(pos[1].attrib['z']) 
-
+                heading = get_heading(float(pos[1].attrib['z']), float(pos[1].attrib['x']))
+                timestamp = datetime.strptime(pos.attrib['timestamp'], "%m/%d/%Y %I:%M:%S %p")
+                gt_segment = int(pos[2].attrib['Segment'])
+                path_id = int(pos[2].attrib['PathId'])
+                pathpos_idx = int(pos[2].attrib['PathPosIdx'])
+                
                 # Skip point if it's velocity vector == 0 and heading (xyz) == [0,0,1]
                 if [n1,n2,n3] == [0,0,0] and [x,y,z] == [0,0,1]:
                     continue
                 
                 # Aggregate information into object and append to trajectory
-                point = {
-                    'lat': lat,
-                    'lon': lon,
-                    'speed': speed,
-                    'x': x,
-                    'y': y,
-                    'z': z,
-                    'heading': get_heading(float(pos[1].attrib['z']), float(pos[1].attrib['x'])),
-                    'timestamp': pos.attrib['timestamp'],
-                    'gt_segment': int(pos[2].attrib['Segment']),
-                    'path_id': int(pos[2].attrib['PathId']),
-                    'pathpos_idx': int(pos[2].attrib['PathPosIdx']),
-                }
-                trajectory.append(point)
+                trajectory[t_len] = lat, lon, speed, x, y, z, heading, timestamp, gt_segment, path_id, pathpos_idx, vehicle_type
+                t_len += 1
 
-            if len(trajectory) > 0:
-                trajectories.append(trajectory)
+            # Make sure trajectory matches minimum length
+            if t_len < self.min_traj_len:
+                continue
+            
+            # Trim off trajectory to actual length
+            trajectory = trajectory[:t_len]
+            
+            # Remove instances in trajectory where vehicle type isn't Car
+            veh_types = trajectory['vehtype'].view('S5')
+            idxs_vtype = np.argwhere(veh_types != b'Car')[:,0]
+            if idxs_vtype.size > 0:
+                trajectory = np.delete(trajectory, idxs_vtype, axis=0)
 
-        # Split trajectories into sub trajectories for some trajectories which are merged
-        trajectories = self.split_trajectories(trajectories, self.split_threshold)
+            # Split trajectory based on locations
+            t_pos = np.stack([trajectory['lat'].view('f8'), trajectory['lon'].view('f8')], axis=1)
+            speeds = np.linalg.norm(np.diff(t_pos, axis=0), axis=1)
+            idxs_speed = np.argwhere(speeds > self.split_threshold)[:,0] + 1
+            
+            # Add splits to trajectories if it's split
+            if idxs_speed.size > 0:
+                # Split trajectory based on speed
+                splits_speed = np.split(trajectory, idxs_speed, axis=0)
+                # For each split
+                for split in splits_speed:
+                    # Trim the split
+                    split_trimmed = split[self.traj_trim_size:-self.traj_trim_size]
+                    # Check if trimmed split is of minimum trajectory length
+                    if len(split_trimmed) >= self.min_traj_len:
+                        trajectories.append(split)
+
+            # Otherwise, append single trajectory
+            else:
+                trajectory_trimmed = trajectory[self.traj_trim_size:-self.traj_trim_size]
+                if len(trajectory_trimmed) >= self.min_traj_len:
+                    trajectories.append(trajectory_trimmed)
         
         # Convert coordinates to wgs84
         trajectories = self.to_wgs84(trajectories)
-
-        # Finally, clean trajectories by trimming and filtering on minimum length
-        trajectories = self.clean_trajectories(trajectories)
         
         return trajectories
 
@@ -457,40 +474,6 @@ class SHDataset(object):
             paths[path_id] = segments
 
         return paths
-        
-    def split_trajectories(self, T, thresh):
-        """
-        Splits the trajectories using the given threshold. Many trajectories exported should be 
-        split up into separate trajectories. This function takes the trajectories, calculating distance
-        between each subsequent point and splits trajectories up if the distance between points is 
-        higher than the given threshold
-        ------
-        Params
-        ------
-        T : list of trajectories
-            The list of trajectory objects containing lat and lon coordinates at least
-        tresh : numberwriter
-            Theshold for splitting up trajectories
-        """
-        new_T = []
-        for traj in T:
-            splits = self.split_t(traj, thresh=thresh)
-            new_T.extend(splits)
-        return new_T
-
-    def clean_trajectories(self, T):
-        """
-        Clean the trajectories by trimming them on both ends and filtering by minimum length
-        """
-        
-        new_T = []
-        for t in T:
-            new_t = t[self.traj_trim_size:-self.traj_trim_size]
-            if len(new_t) < self.min_traj_len:
-                continue
-            else:
-                new_T.append(new_t)
-        return new_T
 
     def to_wgs84(self, T):
         """
@@ -502,24 +485,10 @@ class SHDataset(object):
         coords = cart_to_wgs84(self.ref_coord, x, y, scale_factor=self.coord_scale_factor)
         new_T = []
         for traj in T:
-            curr_t = []
-            for t in traj:
-                curr_t.append({
-                    'lat': coords[i][0],
-                    'lon': coords[i][1],
-                    'speed': t['speed'],
-                    'x': t['x'],
-                    'y': t['y'],
-                    'z': t['z'],
-                    'heading': t['heading'],
-                    'timestamp': t['timestamp'],
-                    'gt_segment': t['gt_segment'],
-                    'path_id': t['path_id'],
-                    'pathpos_idx': t['pathpos_idx'],
-                })
-                i+=1
-
-            new_T.append(curr_t)
+            new_coords = coords[i:i+traj.size]
+            traj['lat'], traj['lon'] = new_coords[:,0], new_coords[:,1]
+            new_T.append(traj)
+            i+=traj.size
         return new_T
 
 
@@ -581,47 +550,18 @@ class SHDataset(object):
 
         final_noise = new_coords + shift_noise
 
-        new_t = []
-        for i, p in enumerate(t):
-            new_t.append({
-                'lat': final_noise[i,0],
-                'lon': final_noise[i,1],
-                'speed': p['speed'],
-                'x': p['x'],
-                'y': p['y'],
-                'z': p['z'],
-                'heading': p['heading'],
-                'timestamp': p['timestamp'],
-                'gt_segment': p['gt_segment'],
-                'path_id': p['path_id'],
-                'pathpos_idx': p['pathpos_idx'],
-            })
-        
+        t['lat'], t['lon'] = final_noise[:,0], final_noise[:,1]
+
         self.noise_function.reset()
 
-        return new_t
-
-    def split_t(self, t, thresh):
-        """
-        Splits up trajectories given some threshold
-        """
-        if len(t) == 1:
-            return [t]
-        
-        t_pos = np.array([(p['lat'], p['lon']) for p in t])
-        speeds = np.linalg.norm(np.diff(t_pos, axis=0), axis=1)
-        idxs = np.argwhere(speeds > thresh)[:,0] + 1
-        t = np.array(t)
-        splits = np.split(t, idxs, axis=0)
-        splits = [split.tolist() for split in splits]
-        return splits
+        return t
         
     def __len__(self):
         return len(self.maps)
 
 
 if __name__ == '__main__':
-
+    # Define and parse cmd line arguments
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
@@ -632,13 +572,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Preprocess the entire dataset
     if args.preprocess_dataset:
+
+        # First process all maps without noise
         print('Processing no noise dataset')
         dataset = SHDataset(noise=False, dataset_dir=args.dataset_dir, noise_config=0)
+
+        # Then process all the different noise configurations
         for i in range(4):
             print(f'Processing dataset w/ noise config {i}')
             dataset = SHDataset(noise=True, dataset_dir=args.dataset_dir, noise_config=i)
 
+    # Load dataset and plot a snapshot as a test
     dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config)
     G1,T1,G2,T2 = dataset.read_snapshots(0, bbox=(52.355, 52.365, 4.860, 4.900))
 
