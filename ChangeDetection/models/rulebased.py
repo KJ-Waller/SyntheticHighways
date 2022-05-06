@@ -54,7 +54,7 @@ class RulebasedDetector(object):
         G_edge_scores = {}
         
         # Loop through trajectories, and for each selected edge, decrement the weight of the edge
-        for t in tqdm(T2):
+        for t in tqdm(T2, desc='Running Rule-based Change Detector'):
             selected_edges = self.map_match_trajectory(t)
             for selected_edge in selected_edges:
                 if selected_edge not in G_edge_scores.keys():

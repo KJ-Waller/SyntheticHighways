@@ -45,7 +45,7 @@ class HistogramDetector(object):
         self.hist, lat_bins, lon_bins = self.init_hist(self.bbox, self.hist_dims)
 
         # For every trajectory, fill in intersecting grid cells in the histogram
-        for t in tqdm(T2):
+        for t in tqdm(T2, desc='Running Histogram Change Detector'):
             for i, p in enumerate(t):
                 if i == 0:
                     continue
