@@ -48,8 +48,7 @@ if __name__ == '__main__':
     
     # Setup dataset snapshots
     dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config, split_threshold=args.split_threshold)
-    G1,T1,G2,T2 = dataset.read_snapshots(args.map_index)
-    G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2, tuple(args.bbox))
+    G1,T1,G2,T2 = dataset.read_snapshots(args.map_index, bbox=tuple(args.bbox))
     total_t2 = len(T2['T'])
     if args.n_traj != 0:
         T1['T'] = random.sample(T1['T'], k=args.n_traj)
