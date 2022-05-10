@@ -9,7 +9,7 @@ This class implements the histogram change detector
 """
 
 class HistogramDetector(object):
-    def __init__(self, G1, bbox, hist_dims=(200,200)):
+    def __init__(self, G1, bbox, hist_dims=(200,200), score_calc_method='intersect', accumulate_scores_hist=False):
         
         """
         Initializes the histogram change detector
@@ -29,6 +29,8 @@ class HistogramDetector(object):
         self.G1 = G1.copy()
         self.bbox = bbox
         self.hist_dims = hist_dims
+        self.score_calc_method = score_calc_method
+        self.accumulate_scores_hist = accumulate_scores_hist
     
     def forward(self, T2):
         """
@@ -86,12 +88,17 @@ class HistogramDetector(object):
         p2 = (lons_binned[1], lats_binned[1])
 
         for lat, lon in zip(lats_binned, lons_binned):
-            hist[lon][lat] = -1.0
+            if self.accumulate_scores_hist:
+                hist[lon][lat] += -1.0
+            else:
+                hist[lon][lat] = -1.0
 
         points = list(bresenham(*p1, *p2))
         for (lon, lat) in points:
-            hist[lon][lat] = -1.0
-
+            if self.accumulate_scores_hist:
+                hist[lon][lat] += -1.0
+            else:
+                hist[lon][lat] = -1.0
 
         return hist
     
@@ -114,6 +121,9 @@ class HistogramDetector(object):
 
             points = list(bresenham(*p1, *p2))
 
+            if self.score_calc_method == 'center':
+                points = points[int(len(points)*0.25):-int(len(points)*0.25)]
+
             edge_score = []
             for (lon, lat) in points:
                 edge_score.append(hist[lon][lat])
@@ -124,8 +134,11 @@ class HistogramDetector(object):
                 edge_score.append(hist[lon][lat+1])
                 edge_score.append(hist[lon+1][lat+1])
                 edge_score.append(hist[lon-1][lat-1])
-                
-            edge_score = np.mean(edge_score)
+            
+            if len(edge_score) == 0:
+                edge_score = 0
+            else:
+                edge_score = np.mean(edge_score)
             edge_scores[edge_id] = edge_score
 
         return edge_scores

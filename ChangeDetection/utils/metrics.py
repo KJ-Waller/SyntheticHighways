@@ -1,8 +1,6 @@
-from multiprocessing.sharedctypes import Value
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve as prcurve
-from sklearn.metrics import f1_score
-from sklearn.metrics import auc, roc_curve, roc_auc_score
+from sklearn.metrics import f1_score, auc
 import networkx as nx
 import numpy as np
 import os
@@ -10,7 +8,6 @@ import pickle5 as pickle
 from tqdm import tqdm
 
 from SHDataset import SHDataset
-from utils import compare_snapshots
 
 def fscore(gt_labels, pred_labels):
     """
@@ -55,7 +52,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None):
     Plots the precision recall curve given ground truth labels and predicted scores
     """
     plt.clf()
-    predictions = {k: pred_scores[k] for k in gt_labels}
+    predictions = {k: np.float64(pred_scores[k]).item() for k in gt_labels}
 
     if log_scale:
         ax = plt.gca()
@@ -79,6 +76,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None):
 
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
     
@@ -106,6 +104,7 @@ def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, sav
 
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
     
@@ -179,49 +178,67 @@ def read_prauc_experiment(folder):
 
     return prauc_random, prauc_rulebased, prauc_hist, prauc_hmm
 
-def fscore_vs_noise(folder='./dummy_results/', savename=None):
+def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None):
     """
-    Plots noise vs fscore, by reading results from the given folder
+    Plots some variable vs fscore, by reading results from the given folder
     """
 
     fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
     
-    x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
-    
-    plt.plot(x, fscores_random, '-o')
-    plt.plot(x, fscores_rulebased, '-o')
-    plt.plot(x, fscores_hist, '-o')
-    plt.plot(x, fscores_hmm, '-o')
+    plt.plot(labels, fscores_random, '-o')
+    plt.plot(labels, fscores_rulebased, '-o')
+    plt.plot(labels, fscores_hist, '-o')
+    plt.plot(labels, fscores_hmm, '-o')
     plt.ylabel('F-Score')
-    plt.title('Noise vs F-Score')
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+    plt.title(f'{x} vs F-Score')
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
 
-def prauc_vs_noise(folder='./dummy_results/', savename=None):
+def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None):
     """
-    Plots noise vs precision and recall AUC given folder containing results over multiple noise configurations
+    Plots some variable vs precision and recall AUC given folder containing results over multiple noise configurations
     """
 
     prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
     
-    x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
-    
-    plt.plot(x, prauc_random, '-o')
-    plt.plot(x, prauc_rulebased, '-o')
-    plt.plot(x, prauc_hist, '-o')
-    plt.plot(x, prauc_hmm, '-o')
+    plt.plot(labels, prauc_random, '-o')
+    plt.plot(labels, prauc_rulebased, '-o')
+    plt.plot(labels, prauc_hist, '-o')
+    plt.plot(labels, prauc_hmm, '-o')
     plt.ylabel('PR-AUC')
-    plt.title('Noise vs PR-AUC')
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+    plt.title(f'{x} vs PR-AUC')
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
+    else:
+        plt.show()
+
+def bar_fscore(fscores, labels, savename=None):
+    """
+    Plots a sequence of F-Scores in a bar chart for comparing histogram configurations
+    """
+    plt.bar(labels, fscores)
+    plt.ylabel('F-Score')
+    plt.title('Histogram Configuration vs F-Score')
+    plt.ylim(0, 1)
+    for i in range(len(labels)):
+        plt.text(i-0.1,round(fscores[i],2),round(fscores[i],2))
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
 
@@ -247,6 +264,7 @@ def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sam
 
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
 
@@ -272,6 +290,7 @@ def compare_experiments_prauc(folders=['results_high_sample', 'results_high_samp
 
     if savename is not None:
         plt.savefig(f'{savename}.png')
+        plt.close()
     else:
         plt.show()
 

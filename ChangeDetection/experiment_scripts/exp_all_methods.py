@@ -1,8 +1,8 @@
 import argparse
 from SHDataset import SHDataset
 import os
-from utils import *
-from metrics import *
+from utils.utils import *
+from utils.metrics import *
 from models.random import RandomDetector
 from models.rulebased import RulebasedDetector
 from models.hmm_fast import HMMChangeDetectorFast
@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
     parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
+    parser.add_argument('--resample_everyn_t', default=1, type=int, help='Resample trajectories every n timed point')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
     parser.add_argument('--num_cpu_hmm', default=4, type=int, help='Number of CPUs to use for HMM change detector')
@@ -47,10 +48,20 @@ if __name__ == '__main__':
         os.mkdir(results_folder)
     
     # Setup dataset snapshots
-    dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config, split_threshold=args.split_threshold)
+    if args.resample_everyn_t == 1:
+        dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir,
+                            noise_config=args.noise_config, split_threshold=args.split_threshold,
+                            resample_timedp=False)
+    else:
+        dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir,
+                            noise_config=args.noise_config, split_threshold=args.split_threshold,
+                            resample_timedp=True, resample_everyn=args.resample_everyn_t)
+
     G1,T1,G2,T2 = dataset.read_snapshots(args.map_index, bbox=tuple(args.bbox))
+
+    # Sample subset of trajectories
     total_t2 = len(T2['T'])
-    if args.n_traj != 0:
+    if args.n_traj != 0 and args.n_traj != total_t2:
         T1['T'] = random.sample(T1['T'], k=args.n_traj)
         T2['T'] = random.sample(T2['T'], k=args.n_traj)
     print(f"Sampled {len(T2['T'])}/{total_t2} trajectories for T2")

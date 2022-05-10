@@ -1,10 +1,11 @@
 import os
 import argparse
-from metrics import *
+from utils.metrics import *
 from datetime import datetime
 
 if __name__ == '__main__':
 
+    # Parse arguments
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--exp_name', default='high_sample', type=str, help='Name of experiment')
@@ -20,10 +21,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Start running noise experiment
     starttime = datetime.now()
     starttime_experiments = starttime
     print(f'Starting Experiment 1 w/ No Noise - Start Time: {starttime.strftime("%H:%M:%S")}')
-    os.system(f"python run_experiments.py --exp_name {args.exp_name}_seed{args.seed}_nonoise --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+    os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_nonoise --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                 --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
                     --split_threshold {args.split_threshold} --seed {args.seed}")
     stoptime = datetime.now()
@@ -32,7 +34,7 @@ if __name__ == '__main__':
 
     starttime = datetime.now()
     print(f'Starting Experiment 2 w/ Noise Config 0 - Start Time: {starttime.strftime("%H:%M:%S")}')
-    os.system(f"python run_experiments.py --exp_name {args.exp_name}_seed{args.seed}_noiseconfig0 --noise --noise_config 0 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+    os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_noiseconfig0 --noise --noise_config 0 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                 --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
                     --split_threshold {args.split_threshold} --seed {args.seed}")
     stoptime = datetime.now()
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     
     starttime = datetime.now()
     print(f'Starting Experiment 3 w/ Noise Config 1 - Start Time: {starttime.strftime("%H:%M:%S")}')
-    os.system(f"python run_experiments.py --exp_name {args.exp_name}_seed{args.seed}_noiseconfig1 --noise --noise_config 1 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+    os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_noiseconfig1 --noise --noise_config 1 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                 --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
                     --split_threshold {args.split_threshold} --seed {args.seed}")
     stoptime = datetime.now()
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     
     starttime = datetime.now()
     print(f'Starting Experiment 4 w/ Noise Config 2 - Start Time: {starttime.strftime("%H:%M:%S")}')
-    os.system(f"python run_experiments.py --exp_name {args.exp_name}_seed{args.seed}_noiseconfig2 --noise --noise_config 2 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+    os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_noiseconfig2 --noise --noise_config 2 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                 --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
                     --split_threshold {args.split_threshold} --seed {args.seed}")
     stoptime = datetime.now()
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     
     starttime = datetime.now()
     print(f'Starting Experiment 5 w/ Noise Config 3 - Start Time: {starttime.strftime("%H:%M:%S")}')
-    os.system(f"python run_experiments.py --exp_name {args.exp_name}_seed{args.seed}_noiseconfig3 --noise --noise_config 3 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+    os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_noiseconfig3 --noise --noise_config 3 --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                 --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
                     --split_threshold {args.split_threshold} --seed {args.seed}")
     stoptime = datetime.now()
@@ -67,7 +69,13 @@ if __name__ == '__main__':
     print(f'Experiment 5 Finished w/ Noise Config 3 - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
     delta = stoptime - starttime_experiments
     print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
-
-    fscore_vs_noise(folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/fscore_vs_noise')
+ 
+    # Save plots
+    x_labels = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
+    x_vs_fscore(x='Noise', labels=x_labels,
+                folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
+                savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/noise_vs_fscore')
     plt.close()
-    prauc_vs_noise(folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/prauc_vs_noise')
+    x_vs_prauc(x='Noise', labels=x_labels,
+                folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
+                savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/noise_vs_prauc')

@@ -93,9 +93,10 @@ def combine_graphs(G1,G2):
     G = nx.compose(G1,G2)
     return G
 
-def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False, 
+def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False, 
                 node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, 
-                show_img=True, fontsize=5, equal_axis_ratio=False, savename=None):
+                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False,
+                savename=None):
     """
     Visualizes the NetworkX graph
 
@@ -124,6 +125,8 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False,
         What fontsize to use for labels, if enabled
     equal_axis_ratio : boolean
         Whether to plot x,y axes with equal aspect ratios
+    zoom_on_traj : boolean
+        Whether to zoom in on the trajectories or to show the entire map
     savename : string
         Location and filename to save plot to. If set to None, it will not save anything
     """
@@ -198,6 +201,14 @@ def plot_graph(G, figsize=(20,40), show_nodes=False, show_labels=False,
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     ax.set_xlabel('longitude')
     ax.set_ylabel('latitude')
+
+    if zoom_on_traj:
+        offset = 1e-3
+        t_lats, t_lons = zip(*[(node[1]['lat'], node[1]['lon']) for node in G.nodes(data=True) if node[1]['color'] == 'red'])
+        lat_bounds = (np.min(t_lats)-offset, np.max(t_lats)+offset)
+        lon_bounds = (np.min(t_lons)-offset, np.max(t_lons)+offset)
+        ax.set_xlim(*lon_bounds)
+        ax.set_ylim(*lat_bounds)
     if equal_axis_ratio:
         ax.axis('equal')
     plt.plot()

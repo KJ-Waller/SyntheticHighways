@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool
 import itertools
-from utils import *
+from utils.utils import *
 import pickle5 as pickle
 from tqdm import tqdm
 import numpy as np
@@ -42,8 +42,8 @@ dataset directory and processes them to pickle files per map and per noise confi
 """
 class SHDataset(object):
     def __init__(self, dataset_dir='./dataset/', split_threshold=200, ref_coord=(52.356758, 4.894004),
-                coord_scale_factor=1, noise=True, noise_config=0, save_cleaned_data=True, min_traj_len=4,
-                traj_trim_size=2, multiprocessing=False):
+                coord_scale_factor=1, noise=True, noise_config=0, resample_timedp=False, resample_everyn=2,
+                 save_cleaned_data=True, min_traj_len=4, traj_trim_size=2, multiprocessing=False):
         """
         Initializes the dataset
 
@@ -70,6 +70,8 @@ class SHDataset(object):
         sigmas = [0.0000125+(i*0.000025) for i in range(4)]
         thetas = sigmas
         self.multiprocessing = multiprocessing
+        self.resample_timedp = resample_timedp
+        self.resample_everyn = resample_everyn
         
         self.noise_mu = np.array([0,0])
         self.noise_sigma = sigmas[noise_config]
@@ -181,6 +183,10 @@ class SHDataset(object):
 
         if bbox is not None:
             G1,T1,G2,T2 = filter_bbox_snapshots(G1,T1,G2,T2, bbox)
+
+        if self.resample_timedp:
+            T1['T'] = self.resample_timedpoints(T1['T'])
+            T2['T'] = self.resample_timedpoints(T2['T'])
 
         return G1,T1,G2,T2
 
@@ -555,6 +561,13 @@ class SHDataset(object):
         self.noise_function.reset()
 
         return t
+
+    def resample_timedpoints(self, T):
+        new_T = []
+        for t in T:
+            new_T.append(t[0:-1:self.resample_everyn])
+        return new_T
+
         
     def __len__(self):
         return len(self.maps)
