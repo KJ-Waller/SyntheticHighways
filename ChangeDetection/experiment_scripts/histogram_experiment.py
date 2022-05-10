@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # Create folder for experimental results
     if not os.path.exists('./experimental_results/'):
         os.mkdir('./experimental_results/')
-    results_dir = os.path.join('./experimental_results/', f'results_{args.exp_name}')
+    results_dir = os.path.join('./experimental_results/', f'results_{args.exp_name}_seed{args.seed}')
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
 

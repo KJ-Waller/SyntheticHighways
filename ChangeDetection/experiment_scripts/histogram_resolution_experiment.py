@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # Create folder for experimental results
     if not os.path.exists('./experimental_results/'):
         os.mkdir('./experimental_results/')
-    results_dir = os.path.join('./experimental_results/', f'results_{args.exp_name}')
+    results_dir = os.path.join('./experimental_results/', f'results_{args.exp_name}_seed{args.seed}')
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
 
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         })
 
     fscores = [res['fscore'] for res in results]
-    dimensions = [f"({res['hist_dimensions']}x{res['hist_dimensions']})" for res in results]
+    dimensions = [f"{res['hist_dimensions'][0]}x{res['hist_dimensions'][1]}" for res in results]
     praucs = [res['fscore'] for res in results]
     plt.close()
     dim_vs_y(fscores, dimensions, y='F-Score', savename=os.path.join(results_dir, f'dims_vs_fscore'))
