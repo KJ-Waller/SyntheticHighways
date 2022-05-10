@@ -1,3 +1,5 @@
-python batch_experiments.py --exp_name alltraj_hmmtrim --n_traj 0 --num_cpu_hmm 16 --map_index 0 --bbox 52.34 52.35 4.89 4.93 --seed 42;
-python batch_experiments.py --exp_name 10000traj_hmmtrim --n_traj 10000 --num_cpu_hmm 16 --map_index 0 --bbox 52.34 52.35 4.89 4.93 --seed 42;
-python batch_experiments.py --exp_name 2000traj_hmmtrim --n_traj 2000 --num_cpu_hmm 16 --map_index 0 --bbox 52.34 52.35 4.89 4.93 --seed 42;
+python -m experiment_scripts.noise_experiment --exp_name noise_exp;
+python -m experiment_scripts.sparsity_experiment --exp_name sparsity_exp;
+python -m experiment_scripts.tfreq_experiment --exp_name tfreq_exp;
+python -m experiment_scripts.histogram_experiment --exp_name hist_exp;
+python -m experiment_scripts.histogram_resolution_experiment --exp_name histres_exp;

@@ -178,6 +178,19 @@ def read_prauc_experiment(folder):
 
     return prauc_random, prauc_rulebased, prauc_hist, prauc_hmm
 
+def dim_vs_y(fscores, dims, y='F-Score', savename=None):
+    plt.plot(dims, fscores, '-o')
+    plt.ylabel(y)
+    plt.xlabel('Histogram Dimension')
+    plt.title(f'Histogram Dimension vs {y}')
+    plt.ylim(0, 1)
+    
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+        plt.close()
+    else:
+        plt.show()
+
 def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None):
     """
     Plots some variable vs fscore, by reading results from the given folder
