@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--exp_name', default='high_sample', type=str, help='Name of experiment')
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
-    parser.add_argument('--num_cpu_hmm', default=4, type=int, help='Number of CPUs to use for HMM change detector')
+    parser.add_argument('--num_cpu_hmm', default=64, type=int, help='Number of CPUs to use for HMM change detector')
     parser.add_argument('--num_steps', default=5, type=int, help='How many different intervals to run for number of trajectories.')
     parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
@@ -34,9 +34,9 @@ if __name__ == '__main__':
     if args.max_trajectories > total_t2:
         raise ValueError(f'--max_trajectories argument set to {args.max_trajectories}, which is larger than the total trajectories in specified bbox: {total_t2}')
     if args.max_trajectories == 0:
-        n_traj_steps = np.linspace(0, total_t2, args.num_steps+1, dtype=np.int)[1:]
+        n_traj_steps = np.linspace(0, total_t2, args.num_steps+1, dtype=np.int64)[1:]
     else:
-        n_traj_steps = np.linspace(0, args.max_trajectories, args.num_steps+1, dtype=np.int)[1:]
+        n_traj_steps = np.linspace(0, args.max_trajectories, args.num_steps+1, dtype=np.int64)[1:]
 
     # Run experiments
     starttime_experiments = datetime.now()

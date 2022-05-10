@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
-    parser.add_argument('--num_cpu_hmm', default=4, type=int, help='Number of CPUs to use for HMM change detector')
+    parser.add_argument('--num_cpu_hmm', default=64, type=int, help='Number of CPUs to use for HMM change detector')
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.34, 52.35, 4.89, 4.93], type=float, help='Set bounding box to train on map')
