@@ -35,7 +35,7 @@ if __name__ == '__main__':
         print(f'Starting Experiment {i+1} Resampling trajectories every {resample_everyn} timed points - Start Time: {starttime.strftime("%H:%M:%S")}')
         os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_resample_step{resample_everyn} --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                     --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
-                        --split_threshold {args.split_threshold} --seed {args.seed}")
+                        --split_threshold {args.split_threshold} --seed {args.seed} --resample_everyn_t {resample_everyn}")
         stoptime = datetime.now()
         delta = stoptime - starttime
         print(f'Experiment {i+1} Finished Resampling trajectories every {resample_everyn} timed points - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
