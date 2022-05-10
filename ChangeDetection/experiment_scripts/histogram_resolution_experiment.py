@@ -91,5 +91,6 @@ if __name__ == '__main__':
     fscores = [res['fscore'] for res in results]
     dimensions = [f"({res['hist_dimensions']}x{res['hist_dimensions']})" for res in results]
     praucs = [res['fscore'] for res in results]
+    plt.close()
     dim_vs_y(fscores, dimensions, y='F-Score', savename=os.path.join(results_dir, f'dims_vs_fscore'))
     dim_vs_y(praucs, dimensions, y='PR-AUC', savename=os.path.join(results_dir, f'dims_vs_prauc'))

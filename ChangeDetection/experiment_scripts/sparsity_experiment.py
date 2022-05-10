@@ -43,7 +43,7 @@ if __name__ == '__main__':
     for i, n_traj in enumerate(n_traj_steps):
         starttime = datetime.now()
         print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
-        os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+        os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
                     --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
                         --split_threshold {args.split_threshold} --seed {args.seed}")
         stoptime = datetime.now()
