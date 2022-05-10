@@ -41,8 +41,6 @@ if __name__ == '__main__':
     # Run experiments
     starttime_experiments = datetime.now()
     for i, n_traj in enumerate(n_traj_steps):
-        if i != (len(n_traj_steps)-1):
-            continue
         starttime = datetime.now()
         print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
         os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
