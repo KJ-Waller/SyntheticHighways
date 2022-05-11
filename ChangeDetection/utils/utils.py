@@ -93,6 +93,9 @@ def combine_graphs(G1,G2):
     G = nx.compose(G1,G2)
     return G
 
+def save_hist(hist, savename):
+    plt.imsave(f'{savename}.png', np.rot90(hist))
+
 def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False, 
                 node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, 
                 show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False,
