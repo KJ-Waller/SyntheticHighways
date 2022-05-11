@@ -2,6 +2,7 @@ import argparse
 from SHDataset import SHDataset
 from models.histogram import HistogramDetector
 import random
+import numpy as np
 from utils.metrics import *
 from utils.utils import *
 

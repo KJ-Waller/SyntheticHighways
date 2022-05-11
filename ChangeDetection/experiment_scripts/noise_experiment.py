@@ -2,6 +2,8 @@ import os
 import argparse
 from utils.metrics import *
 from datetime import datetime
+import random
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -20,6 +22,10 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
 
     args = parser.parse_args()
+
+    # Set seed for random libraries
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     # Start running noise experiment
     starttime = datetime.now()

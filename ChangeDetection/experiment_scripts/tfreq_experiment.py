@@ -3,6 +3,8 @@ import argparse
 from utils.metrics import *
 from datetime import datetime
 from SHDataset import SHDataset
+import random
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -25,6 +27,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Set seed for random libraries
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+
     # Get the range of resample rates to run experiments for
     resample_traj_steps = np.arange(1,args.steps+1)
 
@@ -33,9 +39,14 @@ if __name__ == '__main__':
     for i, resample_everyn in enumerate(resample_traj_steps):
         starttime = datetime.now()
         print(f'Starting Experiment {i+1} Resampling trajectories every {resample_everyn} timed points - Start Time: {starttime.strftime("%H:%M:%S")}')
-        os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_resample_step{resample_everyn} --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
-                    --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
-                        --split_threshold {args.split_threshold} --seed {args.seed} --resample_everyn_t {resample_everyn}")
+        if args.noise:
+            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_resample_step{resample_everyn} --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
+                            --split_threshold {args.split_threshold} --seed {args.seed} --resample_everyn_t {resample_everyn} --noise --noise_config {args.noise_config}")
+        else:
+            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_resample_step{resample_everyn} --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {args.n_traj} \
+                            --split_threshold {args.split_threshold} --seed {args.seed} --resample_everyn_t {resample_everyn}")
         stoptime = datetime.now()
         delta = stoptime - starttime
         print(f'Experiment {i+1} Finished Resampling trajectories every {resample_everyn} timed points - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')

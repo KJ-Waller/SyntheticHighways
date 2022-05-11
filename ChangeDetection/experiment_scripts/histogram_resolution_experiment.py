@@ -1,9 +1,10 @@
 import argparse
 from SHDataset import SHDataset
 from models.histogram import HistogramDetector
-import random
 from utils.metrics import *
 from utils.utils import *
+import random
+import numpy as np
 
 if __name__ == '__main__':
 
