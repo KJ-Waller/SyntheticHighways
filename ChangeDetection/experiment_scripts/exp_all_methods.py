@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # Save figures from bbox showing raw traces and changes
     plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(10,10), savename=os.path.join(results_folder, 'G1T2'), show_img=False)
     _, G12_d, _, _ = compare_snapshots(G1,G2)
-    plot_graph(G12_d, figsize=(15,15), show_labels=True, savename=os.path.join(results_folder, 'Changes'), show_img=False)
+    plot_graph(G12_d, figsize=(10,10), savename=os.path.join(results_folder , 'Changes'), show_nodes=True, show_img=False)
 
     # Get groundtruth labels
     gt_labels = groundtruth_labels(G1, G2)
