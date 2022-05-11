@@ -103,6 +103,8 @@ if __name__ == '__main__':
     threshold_hist = hist_det.find_threshold()
     predictions_hist = {k: 0 if scores_hist[k] < threshold_hist else 1 for k in gt_labels}
     fscore_hist = fscore(gt_labels, predictions_hist)
+    # For histogram method, also save the actual histogram
+    save_hist(hist_det.hist, savename=os.path.join(results_folder, 'histogram'))
 
     # TODO: Remove this
     # T1['T'] = random.sample(T1['T'], k=1000)
