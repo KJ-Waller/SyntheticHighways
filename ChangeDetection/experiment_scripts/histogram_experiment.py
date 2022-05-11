@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # Save figures from bbox showing raw traces and changes
     plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(10,10), savename=os.path.join(results_dir , 'G1T2'), show_img=False)
     _, G12_d, _, _ = compare_snapshots(G1,G2)
-    plot_graph(G12_d, figsize=(15,15), show_labels=True, savename=os.path.join(results_dir , 'Changes'), show_img=False)
+    plot_graph(G12_d, figsize=(10,10), savename=os.path.join(results_dir , 'Changes'), show_nodes=True, show_img=False)
 
     # Get groundtruth labels
     gt_labels = groundtruth_labels(G1, G2)
@@ -65,8 +65,10 @@ if __name__ == '__main__':
     plot_graph(G2_pred_hist_ia, use_weights=True, figsize=(10,10), 
                 savename=os.path.join(results_dir , 'heatmap_hist_intersect_accum'), show_img=False)
     scores_hist_ia = predicted_labels(G2_pred_hist_ia)
-    p_hist_ia, r_hist_ia, ts_hist_ia, pr_auc_hist_ia = PRCurve(gt_labels, scores_hist_ia, savename=os.path.join(results_dir, 'prcurve_logscale_hist_intersect_accum'))
-    p_hist_ia, r_hist_ia, ts_hist_ia, pr_auc_hist_ia = PRCurve(gt_labels, scores_hist_ia, savename=os.path.join(results_dir, 'prcurve_hist_intersect_accum'), log_scale=False)
+    p_hist_ia, r_hist_ia, ts_hist_ia, pr_auc_hist_ia = PRCurve(gt_labels, scores_hist_ia, 
+        savename=os.path.join(results_dir, 'prcurve_logscale_hist_intersect_accum'))
+    p_hist_ia, r_hist_ia, ts_hist_ia, pr_auc_hist_ia = PRCurve(gt_labels, scores_hist_ia, 
+        savename=os.path.join(results_dir, 'prcurve_hist_intersect_accum'), log_scale=False)
     threshold_hist_ia = hist_det.find_threshold()
     predictions_hist_ia = {k: 0 if scores_hist_ia[k] < threshold_hist_ia else 1 for k in gt_labels}
     fscore_hist_ia = fscore(gt_labels, predictions_hist_ia)
@@ -78,8 +80,10 @@ if __name__ == '__main__':
     plot_graph(G2_pred_hist_ca, use_weights=True, figsize=(10,10), 
                 savename=os.path.join(results_dir , 'heatmap_hist_center_accum'), show_img=False)
     scores_hist_ca = predicted_labels(G2_pred_hist_ca)
-    p_hist_ca, r_hist_ca, ts_hist_ca, pr_auc_hist_ca = PRCurve(gt_labels, scores_hist_ca, savename=os.path.join(results_dir, 'prcurve_logscale_hist_center_accum'))
-    p_hist_ca, r_hist_ca, ts_hist_ca, pr_auc_hist_ca = PRCurve(gt_labels, scores_hist_ca, savename=os.path.join(results_dir, 'prcurve_hist_center_accum'), log_scale=False)
+    p_hist_ca, r_hist_ca, ts_hist_ca, pr_auc_hist_ca = PRCurve(gt_labels, scores_hist_ca, 
+        savename=os.path.join(results_dir, 'prcurve_logscale_hist_center_accum'))
+    p_hist_ca, r_hist_ca, ts_hist_ca, pr_auc_hist_ca = PRCurve(gt_labels, scores_hist_ca, 
+        savename=os.path.join(results_dir, 'prcurve_hist_center_accum'), log_scale=False)
     threshold_hist_ca = hist_det.find_threshold()
     predictions_hist_ca = {k: 0 if scores_hist_ca[k] < threshold_hist_ca else 1 for k in gt_labels}
     fscore_hist_ca = fscore(gt_labels, predictions_hist_ca)
@@ -91,8 +95,10 @@ if __name__ == '__main__':
     plot_graph(G2_pred_hist_io, use_weights=True, figsize=(10,10), 
                 savename=os.path.join(results_dir , 'heatmap_hist_intersect_occur'), show_img=False)
     scores_hist_io = predicted_labels(G2_pred_hist_io)
-    p_hist_io, r_hist_io, ts_hist_io, pr_auc_hist_io = PRCurve(gt_labels, scores_hist_io, savename=os.path.join(results_dir, 'prcurve_logscale_hist_intersect_occur'))
-    p_hist_io, r_hist_io, ts_hist_io, pr_auc_hist_io = PRCurve(gt_labels, scores_hist_io, savename=os.path.join(results_dir, 'prcurve_hist_intersect_occur'), log_scale=False)
+    p_hist_io, r_hist_io, ts_hist_io, pr_auc_hist_io = PRCurve(gt_labels, scores_hist_io, 
+        savename=os.path.join(results_dir, 'prcurve_logscale_hist_intersect_occur'))
+    p_hist_io, r_hist_io, ts_hist_io, pr_auc_hist_io = PRCurve(gt_labels, scores_hist_io, 
+        savename=os.path.join(results_dir, 'prcurve_hist_intersect_occur'), log_scale=False)
     threshold_hist_io = hist_det.find_threshold()
     predictions_hist_io = {k: 0 if scores_hist_io[k] < threshold_hist_io else 1 for k in gt_labels}
     fscore_hist_io = fscore(gt_labels, predictions_hist_io)
@@ -104,8 +110,10 @@ if __name__ == '__main__':
     plot_graph(G2_pred_hist_co, use_weights=True, figsize=(10,10), 
                 savename=os.path.join(results_dir , 'heatmap_hist_center_occur'), show_img=False)
     scores_hist_co = predicted_labels(G2_pred_hist_co)
-    p_hist_co, r_hist_co, ts_hist_co, pr_auc_hist_co = PRCurve(gt_labels, scores_hist_co, savename=os.path.join(results_dir, 'prcurve_logscale_hist_center_occur'))
-    p_hist_co, r_hist_co, ts_hist_co, pr_auc_hist_co = PRCurve(gt_labels, scores_hist_co, savename=os.path.join(results_dir, 'prcurve_hist_center_occur'), log_scale=False)
+    p_hist_co, r_hist_co, ts_hist_co, pr_auc_hist_co = PRCurve(gt_labels, scores_hist_co, 
+        savename=os.path.join(results_dir, 'prcurve_logscale_hist_center_occur'))
+    p_hist_co, r_hist_co, ts_hist_co, pr_auc_hist_co = PRCurve(gt_labels, scores_hist_co, 
+        savename=os.path.join(results_dir, 'prcurve_hist_center_occur'), log_scale=False)
     threshold_hist_co = hist_det.find_threshold()
     predictions_hist_co = {k: 0 if scores_hist_co[k] < threshold_hist_co else 1 for k in gt_labels}
     fscore_hist_co = fscore(gt_labels, predictions_hist_co)
