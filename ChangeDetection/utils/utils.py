@@ -1,7 +1,8 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import *
+import os
+from PIL import Image
 
 def get_heading(x,y):
     """
@@ -313,3 +314,29 @@ def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0000):
 
     
     return G1, {'T': T1_new, 'P': T1['P']}, G2, {'T': T2_new, 'P': T2['P']}
+
+
+def save_gif(folder, img_name, savename):
+    """
+    Combines images from an experiment into a GIF (only experiments which use the exp_all_methods.py was)
+    """
+    folders = [os.path.join(folder, f) for f in os.listdir(folder)]
+    folders = [folder for folder in folders if os.path.isdir(folder)]
+    all_files = [os.listdir(folder) for folder in folders]
+    files = [file for files in all_files for file in files if img_name in file]
+    files = [os.path.join(f, file) for f, file in list(zip(folders, files))]
+    
+    imgs = [Image.open(file) for file in files]
+    imgs[0].save(f'{savename}.gif', save_all=True, append_images=imgs[1:], duration=500, loop=0)
+
+def save_histres_gif(folder, savename):
+    """
+    Combines the histograms from the histogram resolution experiments into a GIF
+    """
+    files = [os.path.join(folder, file) for file in os.listdir(folder) if file[:4] == 'hist']
+    
+    imgs = [Image.open(file) for file in files]
+    
+    imgs = [img.resize(imgs[-1].size, Image.ANTIALIAS) for img in imgs]
+    
+    imgs[0].save(f'{savename}.gif', save_all=True, append_images=imgs[1:], duration=500, loop=0)
