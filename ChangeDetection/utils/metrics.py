@@ -178,13 +178,27 @@ def read_prauc_experiment(folder):
 
     return prauc_random, prauc_rulebased, prauc_hist, prauc_hmm
 
+def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(10,7)):
+    plt.figure(figsize=figsize)
+    plt.plot(Chs, fscores, '-o')
+    plt.ylabel(y)
+    plt.xlabel('Heading Weight (Ch)')
+    plt.title(f'Heading Weight vs {y}')
+    plt.ylim(0, 1)
+    
+    if savename is not None:
+        plt.savefig(f'{savename}.png')
+        plt.close()
+    else:
+        plt.show()
+
 def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
+    plt.figure(figsize=figsize)
     plt.plot(dims, fscores, '-o')
     plt.ylabel(y)
     plt.xlabel('Histogram Dimension')
     plt.title(f'Histogram Dimension vs {y}')
     plt.ylim(0, 1)
-    plt.figure(figsize=figsize)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
@@ -199,6 +213,7 @@ def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None
 
     fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
     
+    plt.figure(figsize=figsize)
     plt.plot(labels, fscores_random, '-o')
     plt.plot(labels, fscores_rulebased, '-o')
     plt.plot(labels, fscores_hist, '-o')
@@ -209,7 +224,6 @@ def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None
     plt.title(f'{x} vs F-Score')
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
-    plt.figure(figsize=figsize)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
@@ -224,6 +238,7 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
 
     prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
     
+    plt.figure(figsize=figsize)
     plt.plot(labels, prauc_random, '-o')
     plt.plot(labels, prauc_rulebased, '-o')
     plt.plot(labels, prauc_hist, '-o')
@@ -234,7 +249,6 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     plt.title(f'{x} vs PR-AUC')
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
-    plt.figure(figsize=figsize)
     
     if savename is not None:
         plt.savefig(f'{savename}.png')
