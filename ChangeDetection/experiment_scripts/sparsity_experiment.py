@@ -1,6 +1,7 @@
 import os
 import argparse
 from utils.metrics import *
+from utils.utils import *
 from datetime import datetime
 from SHDataset import SHDataset
 import random
@@ -44,25 +45,25 @@ if __name__ == '__main__':
     else:
         n_traj_steps = np.linspace(0, args.max_trajectories, args.num_steps+1, dtype=np.int64)[1:]
 
-    # # Run experiments
-    # starttime_experiments = datetime.now()
-    # for i, n_traj in enumerate(n_traj_steps):
-    #     starttime = datetime.now()
-    #     print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
-    #     if args.noise:
-    #         os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
-    #                     --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
-    #                         --split_threshold {args.split_threshold} --seed {args.seed} --noise --noise_config {args.noise_config}")
-    #     else:
-    #         os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
-    #                     --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
-    #                         --split_threshold {args.split_threshold} --seed {args.seed}")
-    #     stoptime = datetime.now()
-    #     delta = stoptime - starttime
-    #     print(f'Experiment {i+1} Finished w/ {n_traj}# of trajectories - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
+    # Run experiments
+    starttime_experiments = datetime.now()
+    for i, n_traj in enumerate(n_traj_steps):
+        starttime = datetime.now()
+        print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
+        if args.noise:
+            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
+                            --split_threshold {args.split_threshold} --seed {args.seed} --noise --noise_config {args.noise_config}")
+        else:
+            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
+                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
+                            --split_threshold {args.split_threshold} --seed {args.seed}")
+        stoptime = datetime.now()
+        delta = stoptime - starttime
+        print(f'Experiment {i+1} Finished w/ {n_traj}# of trajectories - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
 
-    # delta = stoptime - starttime_experiments
-    # print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
+    delta = stoptime - starttime_experiments
+    print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
 
     # Save plots
     x_labels = [f'{n_traj}' for n_traj in n_traj_steps]
@@ -73,3 +74,7 @@ if __name__ == '__main__':
     x_vs_prauc(x='# of trajectories', labels=x_labels, xlabel='# of traces',
                 folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
                 savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/#traj_vs_prauc')
+
+    # Save GIF of how the trajectories change
+    save_gif(folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/',
+                img_name='G1T2', savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/G1T2')

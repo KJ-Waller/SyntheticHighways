@@ -85,7 +85,7 @@ if __name__ == '__main__':
             'Ch': Ch
         })
     
-
+    # Save figures
     fscores = [res['fscore'] for res in results]
     Chs = [res['Ch'] for res in results]
     praucs = [res['prauc'] for res in results]

@@ -1,8 +1,8 @@
 import os
 import argparse
 from utils.metrics import *
+from utils.utils import *
 from datetime import datetime
-from SHDataset import SHDataset
 import random
 import numpy as np
 
@@ -62,3 +62,7 @@ if __name__ == '__main__':
     x_vs_prauc(x='Trace Frequency', labels=resample_traj_steps, xlabel='Trace Frequency',
                 folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
                 savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/tfreq_vs_prauc')
+
+    # Save GIF of how the trajectories change
+    save_gif(folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/',
+                img_name='G1T2', savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/G1T2')
