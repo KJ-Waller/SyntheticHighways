@@ -98,7 +98,7 @@ def save_hist(hist, savename):
     plt.imsave(f'{savename}.png', np.rot90(hist))
 
 def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False, 
-                node_size=5, edge_width=1.0, use_weights=False, traj_alpha=1.0, 
+                T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, use_weights=False, traj_alpha=1.0, 
                 show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False,
                 savename=None):
     """
@@ -152,7 +152,9 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
     
     # Plot the nodes if enabled
     if show_nodes:
-        nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_size, ax=ax)
+        nodecols = nx.get_node_attributes(G, 'color')
+        node_sizes = [T_node_size if nodecols[node] == 'red' else G_node_size for node in nodes]
+        nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_sizes, ax=ax)
     if show_labels:
         # node_labels = nx.get_node_attributes(G, 'label')
         node_labels = {node: str(node) for node in G.nodes}
@@ -171,17 +173,17 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         if len(traj_weights) != 0 and len(map_weights) != 0:
             edges_map, eweights_map = zip(*map_weights)
             edges_traj, eweights_traj = zip(*traj_weights)
-            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=edge_width, edge_color=eweights_map, edge_cmap=plt.cm.viridis, ax=ax)
-            nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=edge_width, edge_color=eweights_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=eweights_map, edge_cmap=plt.cm.viridis, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=eweights_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
         # If only map available, plot in blue only
         elif len(traj_weights) == 0 and len(map_weights) != 0:
             sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = np.min(edge_weights), vmax=np.max(edge_weights)))
-            nx.draw_networkx_edges(G, node_pos, width=edge_width, edge_color=edge_weights, edge_cmap=plt.cm.viridis, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.viridis, ax=ax)
             plt.colorbar(sm)
 
         # if only trajectories available, plot in red
         elif len(traj_weights) != 0 and len(map_weights) == 0:
-            nx.draw_networkx_edges(G, node_pos, width=edge_width, edge_color=edge_weights, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
         
     # Otherwise, plot edges with regular color
     else:
@@ -193,14 +195,14 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         if len(traj_colors) != 0 and len(map_colors) != 0:
             edges_map, colors_map = zip(*map_colors)
             edges_traj, colors_traj = zip(*traj_colors)
-            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=edge_width, edge_color=colors_map, edge_cmap=plt.cm.Blues, ax=ax)
-            nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=colors_map, edge_cmap=plt.cm.Blues, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
         # If only map available, plot in blue only
         elif len(traj_colors) == 0 and len(map_colors) != 0:
-            nx.draw_networkx_edges(G, node_pos, width=edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
         # if only trajectories available, plot in red
         elif len(traj_colors) != 0 and len(map_colors) == 0:
-            nx.draw_networkx_edges(G, node_pos, width=edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
 
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     ax.set_xlabel('longitude')
