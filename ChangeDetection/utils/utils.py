@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import os
 from PIL import Image
 
@@ -99,7 +100,7 @@ def save_hist(hist, savename):
 
 def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False, 
                 T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, use_weights=False, traj_alpha=1.0, 
-                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False,
+                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False, show_legend=True,
                 savename=None):
     """
     Visualizes the NetworkX graph
@@ -115,10 +116,14 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         Whether to show nodes of trajectories and map or not
     show_labels : boolean
         Whether to show node ids or not
-    node_size : float
-        How big to plot nodes (show nodes must be set to True)
-    edge_width : float
-        How wide to plot the edges in the graph
+    T_node_size : float
+        How big to plot nodes for trajectories (show nodes must be set to True)
+    G_node_size : float
+        How big to plot nodes for the map (show nodes must be set to True)
+    T_edge_width : float
+        How wide to plot the edges for the trajectories
+    G_edge_width : float
+        How wide to plot the edges for the map
     use_weights : boolean
         Whether to use the weights to color the edges to make a heatmap
     traj_alpha : float range(0,1)
@@ -131,6 +136,8 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         Whether to plot x,y axes with equal aspect ratios
     zoom_on_traj : boolean
         Whether to zoom in on the trajectories or to show the entire map
+    show_legend : boolean
+        Whether to show a legend for map and trajectories
     savename : string
         Location and filename to save plot to. If set to None, it will not save anything
     """
@@ -138,16 +145,21 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
     if G.size() == 0:
         print("Graph is empty")
         return
+
+    # Create the lines for the legend
+    map_line = mlines.Line2D([], [], color='blue', marker='.' if show_nodes else '',
+                          markersize=G_node_size, label='Map')
+    traj_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
+                          markersize=T_node_size, label='Trajectory')
     
     # Fetch the node positions and colors
     node_lats = nx.get_node_attributes(G, 'lat')
     node_lons = nx.get_node_attributes(G, 'lon')
     node_pos = {node: (node_lons[node], node_lats[node]) for node in node_lats.keys()}
-
     node_colors = list(nx.get_node_attributes(G, 'color').values())
     nodes = list(node_pos.keys())
     
-    # plt.figure(1,figsize=figsize)
+    # Set figure size
     fig, ax = plt.subplots(figsize=figsize)
     
     # Plot the nodes if enabled
@@ -156,7 +168,6 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         node_sizes = [T_node_size if nodecols[node] == 'red' else G_node_size for node in nodes]
         nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_sizes, ax=ax)
     if show_labels:
-        # node_labels = nx.get_node_attributes(G, 'label')
         node_labels = {node: str(node) for node in G.nodes}
         nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=fontsize, ax=ax)
         
@@ -175,15 +186,21 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
             edges_traj, eweights_traj = zip(*traj_weights)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=eweights_map, edge_cmap=plt.cm.viridis, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=eweights_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            if show_legend:
+                plt.legend(handles=[map_line, traj_line])
         # If only map available, plot in blue only
         elif len(traj_weights) == 0 and len(map_weights) != 0:
             sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = np.min(edge_weights), vmax=np.max(edge_weights)))
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.viridis, ax=ax)
             plt.colorbar(sm)
+            if show_legend:
+                plt.legend(handles=[map_line])
 
         # if only trajectories available, plot in red
         elif len(traj_weights) != 0 and len(map_weights) == 0:
             nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            if show_legend:
+                plt.legend(handles=[traj_line])
         
     # Otherwise, plot edges with regular color
     else:
@@ -197,17 +214,25 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
             edges_traj, colors_traj = zip(*traj_colors)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=colors_map, edge_cmap=plt.cm.Blues, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            if show_legend:
+                plt.legend(handles=[map_line, traj_line])
         # If only map available, plot in blue only
         elif len(traj_colors) == 0 and len(map_colors) != 0:
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
+            if show_legend:
+                plt.legend(handles=[map_line])
         # if only trajectories available, plot in red
         elif len(traj_colors) != 0 and len(map_colors) == 0:
             nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
+            if show_legend:
+                plt.legend(handles=[traj_line])
 
+    # Add axis labels for lat lon
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     ax.set_xlabel('longitude')
     ax.set_ylabel('latitude')
 
+    # Adjust xlim and ylim if zoom_on_traj is enabled, meaning we should zoom in on the trajectory
     if zoom_on_traj:
         offset = 1e-3
         t_lats, t_lons = zip(*[(node[1]['lat'], node[1]['lon']) for node in G.nodes(data=True) if node[1]['color'] == 'red'])
@@ -215,11 +240,19 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
         lon_bounds = (np.min(t_lons)-offset, np.max(t_lons)+offset)
         ax.set_xlim(*lon_bounds)
         ax.set_ylim(*lat_bounds)
+
+    # Make it so that the xticks and yticks are at the same interval
     if equal_axis_ratio:
         ax.axis('equal')
+
+    # Plot the figure (but don't show yet)
     plt.plot()
+
+    # Show only if enabled
     if show_img:
         plt.show()
+
+    # Save figure if savename is specified
     if savename is not None:
         fig1 = plt.gcf()
         fig1.savefig(f'{savename}.png')
