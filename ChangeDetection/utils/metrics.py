@@ -122,7 +122,14 @@ def prune_edges(G, threshold):
     return G
 
 def read_fscores_experiment(folder):
+    """
+    Reads the fscores from an experiment run using the "exp_all_methods.py" script, which are the three main experiments,
+    namely sparsity, tfreq and noise experiments. It reads the folders and collects the fscores from each experiment for all methods
+    """
     folders = [f for f in natsorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
+    nonoise_check = [True for f in folders if 'nonoise' in f]
+    if len(nonoise_check) == 1 and nonoise_check[0]:
+        folders = [folders[-1], *folders[0:-1]]
     results = []
     for f in folders:
         results_folder = os.path.join(folder, f)
@@ -133,9 +140,6 @@ def read_fscores_experiment(folder):
         with open(results_file, 'rb') as handle:
             result = pickle.load(handle)
         results.append(result)
-        
-    # results = sorted(results, key=lambda res: res['experiment_name'], reverse=False)
-    # results = [results[-1], *results[0:-1]]
     
     fscores_random = []
     fscores_rulebased = []
@@ -149,7 +153,14 @@ def read_fscores_experiment(folder):
     return fscores_random, fscores_rulebased, fscores_hist, fscores_hmm
 
 def read_prauc_experiment(folder):
+    """
+    Reads the PR-AUC from an experiment run using the "exp_all_methods.py" script, which are the three main experiments,
+    namely sparsity, tfreq and noise experiments. It reads the folders and collects the PR-AUCs from each experiment for all methods
+    """
     folders = [f for f in natsorted(os.listdir(folder)) if os.path.isdir(os.path.join(folder,f))]
+    nonoise_check = [True for f in folders if 'nonoise' in f]
+    if len(nonoise_check) == 1 and nonoise_check[0]:
+        folders = [folders[-1], *folders[0:-1]]
     results = []
     for f in folders:
         results_folder = os.path.join(folder, f)
@@ -160,9 +171,6 @@ def read_prauc_experiment(folder):
         with open(results_file, 'rb') as handle:
             result = pickle.load(handle)
         results.append(result)
-        
-    # results = sorted(results, key=lambda res: res['experiment_name'], reverse=False)
-    # results = [results[-1], *results[0:-1]]
     
     prauc_random = []
     prauc_rulebased = []
@@ -177,6 +185,9 @@ def read_prauc_experiment(folder):
     return prauc_random, prauc_rulebased, prauc_hist, prauc_hmm
 
 def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(10,7)):
+    """
+    Plots the Ch (heading parameter) vs some custom variable y for the Rule-based method ablation experiments
+    """
     plt.figure(figsize=figsize)
     plt.plot(Chs, fscores, '-o')
     plt.ylabel(y)
@@ -191,6 +202,9 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(10,7)):
         plt.show()
 
 def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
+    """
+    Plots the dim/resolution of the histogram vs some custom variable y for the histogram method ablation experiments
+    """
     plt.figure(figsize=figsize)
     plt.plot(dims, fscores, '-o')
     plt.ylabel(y)
@@ -401,7 +415,7 @@ def recalc_final_curves(folder):
 #     plt.close()
 
         
-recalc_final_curves(folder='results_tfreq_exp_moresteps_seed42')
+# recalc_final_curves(folder='results_tfreq_exp_moresteps_seed42')
 # recalc_pr_scores(folder='./experimental_results/results_tfreq_exp_moresteps_seed42')
 # recalc_pr_scores(folder='results_high_sample_10000')
 # recalc_pr_scores(folder='results_high_sample_v3')

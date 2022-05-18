@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import os
 from PIL import Image
+from SHDataset import SHDataset
+from tqdm import tqdm
+import pyproj
+geodesic = pyproj.Geod(ellps='WGS84')
 
 def get_heading(x,y):
     """
