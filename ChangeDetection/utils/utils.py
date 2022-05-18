@@ -255,7 +255,7 @@ def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False,
     # Save figure if savename is specified
     if savename is not None:
         fig1 = plt.gcf()
-        fig1.savefig(f'{savename}.png')
+        fig1.savefig(f'{savename}.png', bbox_inches = "tight")
     
 def compare_snapshots(G1, G2):
     """
