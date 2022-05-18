@@ -15,7 +15,8 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_dir', default='./dataset/', type=str, help='Dataset root directory')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--num_cpu_hmm', default=64, type=int, help='Number of CPUs to use for HMM change detector')
-    parser.add_argument('--steps', default=5, type=int, help='How many different intervals to run for number of trajectories.')
+    parser.add_argument('--steps', default=6, type=int, help='How many different intervals to run for number of trajectories.')
+    parser.add_argument('--step_size', default=3, type=int, help='How big the step is for each interval for temporal resampling of trajectories.')
     parser.add_argument('--noise', default=False, action='store_true', help='Add noise to trajectories')
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
     parser.add_argument('--n_traj', default=1, type=int, help='Number of trajectories to sample. 0 is all')
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     random.seed(args.seed)
 
     # Get the range of resample rates to run experiments for
-    resample_traj_steps = np.arange(1,args.steps+1)
+    resample_traj_steps = np.arange(1,(args.steps*args.step_size)+1, args.step_size)
 
     # Run experiments
     starttime_experiments = datetime.now()
