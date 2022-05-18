@@ -8,6 +8,7 @@ joblib
 kiwisolver
 leuvenmapmatching
 matplotlib
+natsort
 networkx
 numpy
 Pillow
