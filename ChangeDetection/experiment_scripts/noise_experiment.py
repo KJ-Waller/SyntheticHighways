@@ -78,7 +78,10 @@ if __name__ == '__main__':
     print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
  
     # Save plots
-    x_labels = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
+    noise_in_meters = measure_noise()
+    x_labels = [f"{round(noise_conf['meters'],1)}m"  for noise_conf in noise_in_meters]
+    x_labels = ['No Noise', *x_labels]
+
     x_vs_fscore(x='Noise', labels=x_labels,
                 folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
                 savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/noise_vs_fscore')

@@ -375,3 +375,43 @@ def save_histres_gif(folder, savename):
     imgs = [img.resize(imgs[-1].size, Image.ANTIALIAS) for img in imgs]
     
     imgs[0].save(f'{savename}.gif', save_all=True, append_images=imgs[1:], duration=500, loop=0)
+
+
+def measure_noise_t(t, t_):
+    """
+    Measures the average noise in meters between a trajectory with no noise (t) and trajectory with noise (t_)
+    """
+    t = np.stack([t['lat'].view('f8'), t['lon'].view('f8')], axis=1)
+    t_ = np.stack([t_['lat'].view('f8'), t_['lon'].view('f8')], axis=1)
+    _, _, dists = geodesic.inv(t[:,1], t[:,0], t_[:,1], t_[:,0])
+    return np.mean(dists)
+
+def measure_noise(print_results=False):
+    """
+    Measures the average noise for every noise configuration in meters
+    """
+    dataset_nonoise = SHDataset(noise=False)
+    G1,T1,G2,T2 = dataset_nonoise.read_snapshots(0)
+    
+    results = []
+    
+    for i in range(4):
+        dataset = SHDataset(noise=True, noise_config=i)
+        G1_,T1_,G2_,T2_ = dataset.read_snapshots(0)
+        
+        noise = []
+        
+        for j in tqdm(range(len(T2['T'])), desc=f'Calculating noise in meters for noise config {i}'):
+            t = T2['T'][j]
+            t_ = T2_['T'][j]
+            dists = measure_noise_t(t, t_)
+            noise.append(dists)
+        
+        results.append({
+            'config': i,
+            'meters': np.mean(noise)
+        })
+        if print_results:
+            print(f'Dataset noise config {i} has noise {np.mean(noise)}')
+
+    return results
