@@ -83,7 +83,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None, f
 
     # Save plot if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -118,7 +118,7 @@ def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, sav
 
     # Save plot if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -238,7 +238,7 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(8,6)):
     
     # Save figure if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -262,7 +262,7 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     
     # Save results if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -295,7 +295,7 @@ def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None
     
     # Save figure if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -351,7 +351,7 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     
     # Save figure if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -375,7 +375,7 @@ def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
 
     # Save results if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -401,7 +401,7 @@ def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sam
     plt.ylim(0, 1)
 
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -427,7 +427,7 @@ def compare_experiments_prauc(folders=['results_high_sample', 'results_high_samp
     plt.ylim(0, 1)
 
     if savename is not None:
-        plt.savefig(f'{savename}.png')
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -447,10 +447,12 @@ def replot_tfreq_results(folder, steps=6, step_size=3):
                 folder=exp_folder,
                 savename=os.path.join(exp_folder, "tfreq_vs_prauc"), figsize=(8,6))
 
-def replot_tfreq_exps()
+def replot_tfreq_exps():
     folders = [f for f in os.listdir('experimental_results') if 'tfreq' in f]
     for f in folders:
         if 'moresteps' in f:
-            replot_results(f, steps=6, step_size=3)
+            replot_tfreq_results(f, steps=6, step_size=3)
         else:
-            replot_results(f, steps=5, step_size=1)
+            replot_tfreq_results(f, steps=5, step_size=1)
+
+replot_tfreq_exps()
