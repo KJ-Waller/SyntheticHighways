@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--histogram_dims', nargs='+', default=[200, 200], type=int, help='What dimensions to make the histogram for the Histogram based change detector')
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
-    parser.add_argument('--bbox', nargs='+', default=[52.34,52.36, 4.90, 4.93], type=float, help='Set bounding box to train on map')
+    parser.add_argument('--bbox', nargs='+', default=[52.34, 52.36, 4.895, 4.93], type=float, help='Set bounding box to train on map')
     parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
 
     args = parser.parse_args()
@@ -69,7 +69,8 @@ if __name__ == '__main__':
     # Save figures from bbox showing raw traces and changes
     plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(8,8), savename=os.path.join(results_folder, 'G1T2'), show_img=False)
     _, G12_d, _, _ = compare_snapshots(G1,G2)
-    plot_graph(G12_d, figsize=(8,8), savename=os.path.join(results_folder , 'Changes'), show_nodes=True, show_img=False)
+    plot_graph(G12_d, figsize=(8,8), savename=os.path.join(results_folder , 'Changes'), 
+                show_nodes=True, show_img=False, removed_road_edge_width=3)
 
     # Get groundtruth labels
     gt_labels = groundtruth_labels(G1, G2)
@@ -77,29 +78,38 @@ if __name__ == '__main__':
     # Run experiment for random change detector
     random_det = RandomDetector(G1)
     G2_pred_rand = random_det.forward(T2)
-    plot_graph(G2_pred_rand, use_weights=True, figsize=(8,8), savename=os.path.join(results_folder, 'heatmap_random'), show_img=False)
+    plot_graph(G2_pred_rand, use_weights=True, figsize=(8,8), 
+                savename=os.path.join(results_folder, 'heatmap_random'), show_img=False)
     scores_rand = predicted_labels(G2_pred_rand)
-    p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_logscale_random'))
-    p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, savename=os.path.join(results_folder, 'prcurve_random'), log_scale=False)
+    p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, 
+                savename=os.path.join(results_folder, 'prcurve_logscale_random'))
+    p_rand, r_rand, ts_rand, pr_auc_rand = PRCurve(gt_labels, scores_rand, 
+                savename=os.path.join(results_folder, 'prcurve_random'), log_scale=False)
     fscore_rand = fscore(gt_labels, scores_rand)
 
     # Run experiment for rulebased change detector
     rule_det = RulebasedDetector(G1)
     G2_pred_rb = rule_det.forward(T2['T'])
-    plot_graph(G2_pred_rb, use_weights=True, figsize=(8,8), savename=os.path.join(results_folder, 'heatmap_rulebased'), show_img=False)
+    plot_graph(G2_pred_rb, use_weights=True, figsize=(8,8), 
+                savename=os.path.join(results_folder, 'heatmap_rulebased'), show_img=False)
     scores_rb = predicted_labels(G2_pred_rb)
-    p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, savename=os.path.join(results_folder, 'prcurve_logscale_rulebased'))
-    p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, savename=os.path.join(results_folder, 'prcurve_rulebased'), log_scale=False)
+    p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, 
+                savename=os.path.join(results_folder, 'prcurve_logscale_rulebased'))
+    p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, 
+                savename=os.path.join(results_folder, 'prcurve_rulebased'), log_scale=False)
     predictions_rb = {k: int(scores_rb[k] == 0) for k in gt_labels}
     fscore_rb = fscore(gt_labels, predictions_rb)
 
     # Run experiment for histogram based change detector
     hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims))
     G2_pred_hist = hist_det.forward(T2['T'])
-    plot_graph(G2_pred_hist, use_weights=True, figsize=(8,8), savename=os.path.join(results_folder, 'heatmap_hist'), show_img=False)
+    plot_graph(G2_pred_hist, use_weights=True, figsize=(8,8), 
+                savename=os.path.join(results_folder, 'heatmap_hist'), show_img=False)
     scores_hist = predicted_labels(G2_pred_hist)
-    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_folder, 'prcurve_logscale_hist'))
-    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_folder, 'prcurve_hist'), log_scale=False)
+    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, 
+                savename=os.path.join(results_folder, 'prcurve_logscale_hist'))
+    p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, 
+                savename=os.path.join(results_folder, 'prcurve_hist'), log_scale=False)
     threshold_hist = hist_det.find_threshold()
     predictions_hist = {k: 0 if scores_hist[k] < threshold_hist else 1 for k in gt_labels}
     fscore_hist = fscore(gt_labels, predictions_hist)
@@ -113,17 +123,22 @@ if __name__ == '__main__':
     # Run experiment for hmm change detector
     hmm_det = HMMChangeDetectorFast(G1, num_cpu=args.num_cpu_hmm, use_latlon=False)
     G2_pred_hmm = hmm_det.forward(T2['T'])
-    plot_graph(G2_pred_hmm, use_weights=True, figsize=(8,8), savename=os.path.join(results_folder, 'heatmap_hmm'), show_img=False)
+    plot_graph(G2_pred_hmm, use_weights=True, figsize=(8,8), 
+                savename=os.path.join(results_folder, 'heatmap_hmm'), show_img=False)
     scores_hmm = predicted_labels(G2_pred_hmm)
-    p_hmm, r_hmm, ts_hmm, pr_auc_hmm = PRCurve(gt_labels, scores_hmm, savename=os.path.join(results_folder, 'prcurve_logscale_hmm'))
-    p_hmm, r_hmm, ts_hmm, pr_auc_hmm = PRCurve(gt_labels, scores_hmm, savename=os.path.join(results_folder, 'prcurve_hmm'), log_scale=False)
+    p_hmm, r_hmm, ts_hmm, pr_auc_hmm = PRCurve(gt_labels, scores_hmm, 
+                savename=os.path.join(results_folder, 'prcurve_logscale_hmm'))
+    p_hmm, r_hmm, ts_hmm, pr_auc_hmm = PRCurve(gt_labels, scores_hmm, 
+                savename=os.path.join(results_folder, 'prcurve_hmm'), log_scale=False)
     predictions_hmm = {k: int(scores_hmm[k] == 0) for k in gt_labels}
     fscore_hmm = fscore(gt_labels, predictions_hmm)
 
     # Create combine PR curve and save it
     prs, rs, aucs = [p_rand, p_rb, p_hist, p_hmm], [r_rand, r_rb, r_hist, r_hmm], [pr_auc_rand, pr_auc_rb, pr_auc_hist, pr_auc_hmm]
-    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], savename=os.path.join(results_folder, 'prcurve_logscale_combined'), log_scale=True)
-    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], savename=os.path.join(results_folder, 'prcurve_combined'), log_scale=False)
+    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], 
+                savename=os.path.join(results_folder, 'prcurve_logscale_combined'), log_scale=True)
+    PRCombine(ps=prs, rs=rs, aucs=aucs, labels=['Random', 'Rule-based', 'Histogram', 'HMM'], 
+                savename=os.path.join(results_folder, 'prcurve_combined'), log_scale=False)
 
     quant_results = {
         'experiment_name': args.exp_name,

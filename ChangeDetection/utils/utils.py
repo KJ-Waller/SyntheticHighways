@@ -102,9 +102,10 @@ def save_hist(hist, savename):
     plt.imsave(f'{savename}.png', np.rot90(hist))
 
 def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False, 
-                T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, use_weights=False, traj_alpha=1.0, 
-                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False, show_legend=True,
-                savename=None):
+                T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, 
+                removed_road_edge_width=None, use_weights=False, traj_alpha=1.0, 
+                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False, 
+                show_legend=True, savename=None):
     """
     Visualizes the NetworkX graph
 
@@ -127,6 +128,8 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         How wide to plot the edges for the trajectories
     G_edge_width : float
         How wide to plot the edges for the map
+    removed_road_edge_width : float
+        How wide to plot the edges of roads that are removed
     use_weights : boolean
         Whether to use the weights to color the edges to make a heatmap
     traj_alpha : float range(0,1)
@@ -151,9 +154,11 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
 
     # Create the lines for the legend
     map_line = mlines.Line2D([], [], color='blue', marker='.' if show_nodes else '',
-                          markersize=G_node_size, label='Map')
+                          markersize=G_node_size, linewidth=G_edge_width, label='Map')
+    map_removed_road_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
+                          markersize=G_node_size, linewidth=removed_road_edge_width, label='Removed road')
     traj_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
-                          markersize=T_node_size, label='Trajectory')
+                          markersize=T_node_size, linewidth=T_edge_width, label='Trajectory')
     
     # Fetch the node positions and colors
     node_lats = nx.get_node_attributes(G, 'lat')
@@ -189,15 +194,11 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
             edges_traj, eweights_traj = zip(*traj_weights)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=eweights_map, edge_cmap=plt.cm.viridis, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=eweights_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
-            if show_legend:
-                plt.legend(handles=[map_line, traj_line])
         # If only map available, plot in blue only
         elif len(traj_weights) == 0 and len(map_weights) != 0:
             sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = np.min(edge_weights), vmax=np.max(edge_weights)))
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.viridis, ax=ax)
             plt.colorbar(sm)
-            if show_legend:
-                plt.legend(handles=[map_line])
 
         # if only trajectories available, plot in red
         elif len(traj_weights) != 0 and len(map_weights) == 0:
@@ -219,11 +220,25 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
             if show_legend:
                 plt.legend(handles=[map_line, traj_line])
-        # If only map available, plot in blue only
-        elif len(traj_colors) == 0 and len(map_colors) != 0:
+        # If only map available, and we don't want to highlight removed roads, plot in blue only
+        elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is None:
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
             if show_legend:
                 plt.legend(handles=[map_line])
+        # If only map available, and we want to highlight removed roads
+        elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is not None:
+            # Get edgelists and color lists for remaining and removed roads
+            G_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'blue']
+            G_diff_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'red']
+            traj_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if type(edge[0]) == str]
+            G_edgelist, G_colors = zip(*G_colors)
+            G_diff_edgelist, G_diff_colors = zip(*G_diff_colors)
+            
+            # Plot
+            nx.draw_networkx_edges(G, node_pos, edgelist=G_edgelist, width=G_edge_width, edge_color=G_colors, edge_cmap=plt.cm.Blues, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=G_diff_edgelist, width=removed_road_edge_width, edge_color=G_diff_colors, edge_cmap=plt.cm.Reds, ax=ax)
+            if show_legend:
+                plt.legend(handles=[map_line, map_removed_road_line])
         # if only trajectories available, plot in red
         elif len(traj_colors) != 0 and len(map_colors) == 0:
             nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
