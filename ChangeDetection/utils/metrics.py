@@ -367,7 +367,7 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     else:
         plt.show()
 
-    plf.clf()
+    plt.clf()
 
 def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
     """
