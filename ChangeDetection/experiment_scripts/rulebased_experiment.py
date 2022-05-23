@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--steps', default=10, type=int, help='How many different intervals to run for heading parameter')
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
-    parser.add_argument('--bbox', nargs='+', default=[52.34, 52.35, 4.89, 4.93], type=float, help='Set bounding box to train on map')
+    parser.add_argument('--bbox', nargs='+', default=[52.34,52.36, 4.90, 4.93], type=float, help='Set bounding box to train on map')
     parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
 
     args = parser.parse_args()
@@ -51,9 +51,9 @@ if __name__ == '__main__':
     print(f"Sampled {len(T2['T'])}/{total_t2} trajectories for T2")
 
     # Save figures from bbox showing raw traces and changes
-    plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(10,10), savename=os.path.join(results_dir , 'G1T2'), show_img=False)
+    plot_graph(snapshot_to_nxgraph(G1,T2['T']), figsize=(8,8), savename=os.path.join(results_dir , 'G1T2'), show_img=False)
     _, G12_d, _, _ = compare_snapshots(G1,G2)
-    plot_graph(G12_d, figsize=(10,10), savename=os.path.join(results_dir , 'Changes'), show_nodes=True, show_img=False)
+    plot_graph(G12_d, figsize=(8,8), savename=os.path.join(results_dir , 'Changes'), show_nodes=True, show_img=False)
 
     # Get groundtruth labels
     gt_labels = groundtruth_labels(G1, G2)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         print(f'Running experiment {i}/{heading_weights.size}')
         rule_det = RulebasedDetector(G1, Ch=Ch)
         G2_pred_rb = rule_det.forward(T2['T'])
-        plot_graph(G2_pred_rb, use_weights=True, figsize=(10,10), savename=os.path.join(results_dir, f'heatmap_rulebased_Ch{Ch}'), show_img=False)
+        plot_graph(G2_pred_rb, use_weights=True, figsize=(8,8), savename=os.path.join(results_dir, f'heatmap_rulebased_Ch{Ch}'), show_img=False)
         scores_rb = predicted_labels(G2_pred_rb)
         p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, savename=os.path.join(results_dir, f'prcurve_logscale_rulebased_Ch{Ch}'))
         p_rb, r_rb, ts_rb, pr_auc_rb = PRCurve(gt_labels, scores_rb, savename=os.path.join(results_dir, f'prcurve_rulebased_Ch{Ch}'), log_scale=False)
