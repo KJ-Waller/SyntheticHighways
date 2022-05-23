@@ -59,7 +59,7 @@ if __name__ == '__main__':
     gt_labels = groundtruth_labels(G1, G2)
 
     # Get the different dimensions we want to run experiments for (eg 50x50, 100x100, ... , 500x500)
-    dims = np.arange(50, 550, 50)
+    dims = np.arange(100, 1100, 100)
 
     # Run experiments while saving results
     results = []
