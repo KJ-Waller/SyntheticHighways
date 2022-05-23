@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import os
 from PIL import Image
-from SHDataset import SHDataset
 from tqdm import tqdm
 import pyproj
 geodesic = pyproj.Geod(ellps='WGS84')
@@ -102,7 +101,7 @@ def combine_graphs(G1,G2):
 def save_hist(hist, savename):
     plt.imsave(f'{savename}.png', np.rot90(hist))
 
-def plot_graph(G, figsize=(10,10), show_nodes=False, show_labels=False, 
+def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False, 
                 T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, use_weights=False, traj_alpha=1.0, 
                 show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False, show_legend=True,
                 savename=None):
@@ -389,33 +388,3 @@ def measure_noise_t(t, t_):
     t_ = np.stack([t_['lat'].view('f8'), t_['lon'].view('f8')], axis=1)
     _, _, dists = geodesic.inv(t[:,1], t[:,0], t_[:,1], t_[:,0])
     return np.mean(dists)
-
-def measure_noise(print_results=False):
-    """
-    Measures the average noise for every noise configuration in meters
-    """
-    dataset_nonoise = SHDataset(noise=False)
-    G1,T1,G2,T2 = dataset_nonoise.read_snapshots(0)
-    
-    results = []
-    
-    for i in range(4):
-        dataset = SHDataset(noise=True, noise_config=i)
-        G1_,T1_,G2_,T2_ = dataset.read_snapshots(0)
-        
-        noise = []
-        
-        for j in tqdm(range(len(T2['T'])), desc=f'Calculating noise in meters for noise config {i}'):
-            t = T2['T'][j]
-            t_ = T2_['T'][j]
-            dists = measure_noise_t(t, t_)
-            noise.append(dists)
-        
-        results.append({
-            'config': i,
-            'meters': np.mean(noise)
-        })
-        if print_results:
-            print(f'Dataset noise config {i} has noise {np.mean(noise)}')
-
-    return results

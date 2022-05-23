@@ -49,6 +49,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None, f
     """
     Plots the precision recall curve given ground truth labels and predicted scores
     """
+    plt.close()
     plt.clf()
 
     # Make sure labels are aligned according to order of edges in gt_labels
@@ -84,17 +85,21 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None, f
     # Save plot if specified
     if savename is not None:
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
     
     return p, r, ts, pr_auc
 
-def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, savename=None):
+def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, savename=None, figsize=(8,6)):
     """
     Combines the precision and recall curves for multiple methods, plots labels and AUCs
     """
+    # Clear current figure before plotting
     plt.clf()
+    
+    # Initialize plot figure size and style
+    plt.figure(figsize=figsize)
+    set_plot_style()
 
     # Plot log scale if specified
     if log_scale:
@@ -104,10 +109,6 @@ def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, sav
     # Plot the individual precision and recalls for each method
     for p, r in zip(ps, rs):
         plt.plot(r, p)
-    
-    # Initialize plot figure size and style
-    plt.figure(figsize=figsize)
-    set_plot_style()
         
     # Plot the results
     labels = [f'{label} (auc: {round(auroc, 2)})' for label, auroc in list(zip(labels, aucs))]
@@ -118,10 +119,12 @@ def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, sav
 
     # Save plot if specified
     if savename is not None:
-        plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
+        plt.gcf()
+        plt.savefig(f'{savename}.png', bbox_inches='tight')
     else:
         plt.show()
+
+    plt.clf()
     
 def prune_edges(G, threshold):
     """
@@ -223,6 +226,7 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(8,6)):
     """
     Plots the Ch (heading parameter) vs some custom variable y for the Rule-based method ablation experiments
     """
+    plt.clf()
     
     # Initialize plot figure size and style
     plt.figure(figsize=figsize)
@@ -238,15 +242,18 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(8,6)):
     
     # Save figure if specified
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plt.clf()
 
 def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     """
     Plots the dim/resolution of the histogram vs some custom variable y for the histogram method ablation experiments
     """
+    plt.clf()
     
     # Initialize plot figure size and style
     plt.figure(figsize=figsize)
@@ -262,15 +269,18 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     
     # Save results if specified
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+    
+    plt.clf()
 
 def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7)):
     """
     Plots some variable vs fscore, by reading results from the given folder
     """
+    plt.clf()
     
     # Read the results from the folders
     fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
@@ -295,10 +305,12 @@ def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None
     
     # Save figure if specified
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plt.clf()
 
 def set_plot_style():
     # use a gray background
@@ -327,6 +339,7 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     """
     Plots some variable vs precision and recall AUC given folder containing results over multiple noise configurations
     """
+    plt.clf()
     
     # Read the results from the folders
     prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
@@ -351,15 +364,18 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     
     # Save figure if specified
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plf.clf()
 
 def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
     """
     Plots a sequence of F-Scores in a bar chart for comparing histogram configurations
     """
+    plt.clf()
     
     # Initialize plot figure size and style
     plt.figure(figsize=figsize)
@@ -375,10 +391,12 @@ def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
 
     # Save results if specified
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plt.clf()
 
 def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
@@ -401,10 +419,12 @@ def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sam
     plt.ylim(0, 1)
 
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plt.clf()
 
 def compare_experiments_prauc(folders=['results_high_sample', 'results_high_sample_v3'], labels=['Dirty', 'Clean'], savename=None):
     x = ['No Noise', 'Noise Config 1', 'Noise Config 2', 'Noise Config 3', 'Noise Config 4']
@@ -427,10 +447,12 @@ def compare_experiments_prauc(folders=['results_high_sample', 'results_high_samp
     plt.ylim(0, 1)
 
     if savename is not None:
+        plt.gcf()
         plt.savefig(f'{savename}.png',bbox_inches='tight')
-        plt.close()
     else:
         plt.show()
+
+    plt.clf()
 
 def replot_tfreq_results(folder, steps=6, step_size=3):
     resample_traj_steps = np.arange(1,(steps*step_size)+1, step_size)
@@ -455,4 +477,4 @@ def replot_tfreq_exps():
         else:
             replot_tfreq_results(f, steps=5, step_size=1)
 
-replot_tfreq_exps()
+# replot_tfreq_exps()
