@@ -25,7 +25,7 @@ def find_hmm_mismatches_parallel(G1, T2):
                 if e in removed_edges:
                     mismatched_t = True
             if mismatched_t:
-                mismatched.append(t, path)
+                mismatched.append((t, path))
         
     return not_matched, mismatched
 
