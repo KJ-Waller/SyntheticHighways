@@ -3,3 +3,4 @@ TODOS
     * change plots accordingly
 * Create plots for HMM method where it goes wrong, also for rule-based method for analysis section
 * Make scripts run over 3 seeds, averaging results
+* Make it so that HMM method uses entire G1 map and only keeps bounding box at the end
