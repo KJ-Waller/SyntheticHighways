@@ -152,13 +152,27 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         print("Graph is empty")
         return
 
+    # Change map to tab:blue
+    blue_map_colors = {(edge[0], edge[1]): 'tab:blue' for edge in G.edges(data=True) if edge[2]['color'] == 'blue'}
+    nx.set_edge_attributes(G, blue_map_colors, name='color')
+
     # Create the lines for the legend
-    map_line = mlines.Line2D([], [], color='blue', marker='.' if show_nodes else '',
+    map_line = mlines.Line2D([], [], color='tab:blue', marker='.' if show_nodes else '',
                           markersize=G_node_size, linewidth=G_edge_width, label='Map')
-    map_removed_road_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
-                          markersize=G_node_size, linewidth=removed_road_edge_width, label='Removed road')
+    map_removed_road_line = mlines.Line2D([], [], color='magenta', marker='',
+                          markersize=G_node_size, linewidth=removed_road_edge_width, label='Removed Edge')
     traj_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
-                          markersize=T_node_size, linewidth=T_edge_width, label='Trajectory')
+                          markersize=T_node_size, linewidth=T_edge_width, alpha=traj_alpha, label='Trajectory')
+    mismatched_line = mlines.Line2D([], [], color='orange', marker='',
+                          markersize=G_node_size, linewidth=T_edge_width, label='Mismatched Edge')
+    path_line = mlines.Line2D([], [], color='green', marker='',
+                          markersize=G_node_size, linewidth=T_edge_width, label='Path')
+    
+    # Get list of green and orange edges (representing path and mismatched edges)
+    # for checking if path and mismatched edges are to be plotted
+    e_colors = nx.get_edge_attributes(G, name='color')
+    green_edges = [col for col in e_colors.values() if col == 'green']
+    orange_edges = [col for col in e_colors.values() if col == 'orange']
     
     # Fetch the node positions and colors
     node_lats = nx.get_node_attributes(G, 'lat')
@@ -219,12 +233,18 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=colors_map, edge_cmap=plt.cm.Blues, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
             if show_legend:
-                plt.legend(handles=[map_line, traj_line])
+                if len(green_edges) > 0 and len(orange_edges) > 0:
+                    plt.legend(handles=[map_line, traj_line, map_removed_road_line, path_line, mismatched_line])
+                else:
+                    plt.legend(handles=[map_line, traj_line])
         # If only map available, and we don't want to highlight removed roads, plot in blue only
         elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is None:
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
             if show_legend:
-                plt.legend(handles=[map_line])
+                if len(green_edges) > 0 and len(orange_edges) > 0:
+                    plt.legend(handles=[map_line, traj_line, map_removed_road_line, path_line, mismatched_line])
+                else:
+                    plt.legend(handles=[map_line])
         # If only map available, and we want to highlight removed roads
         elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is not None:
             # Get edgelists and color lists for remaining and removed roads
@@ -289,7 +309,7 @@ def compare_snapshots(G1, G2):
     G1_diff_edges = [(edge) for edge in G1.edges(data=True) if (edge[0], edge[1]) in G1_diff_edges]
     G1_d = nx.create_empty_copy(G1)
     G1_d.add_edges_from(G1_diff_edges)
-    nx.set_edge_attributes(G1_d, 'red', name='color')
+    nx.set_edge_attributes(G1_d, 'magenta', name='color')
     G12_d = nx.compose(G2, G1_d)
     
     # Create graph highlighting edges in G2 not in G1
@@ -297,7 +317,7 @@ def compare_snapshots(G1, G2):
     G2_diff_edges = [(edge) for edge in G2.edges(data=True) if (edge[0], edge[1]) in G2_diff_edges]
     G2_d = nx.create_empty_copy(G2)
     G2_d.add_edges_from(G2_diff_edges)
-    nx.set_edge_attributes(G2_d, 'red', name='color')
+    nx.set_edge_attributes(G2_d, 'magenta', name='color')
     G21_d = nx.compose(G1, G2_d)
     
     return G1_d, G12_d, G2_d, G21_d

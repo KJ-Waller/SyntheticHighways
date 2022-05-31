@@ -9,9 +9,9 @@ This class implements the HMM change detector
 """
 
 class HMMChangeDetector(object):
-    def __init__(self, G1, use_latlon=False, obs_noise=4, obs_noise_ne=4, max_dist_init=100,
-                max_dist=100, min_prob_norm=0.001, non_emitting_states=True, non_emitting_length_factor=0.75,
-                max_lattice_width=None, dist_noise=10, dist_noise_ne=10, restrained_ne=True, avoid_goingback=True,
+    def __init__(self, G1, use_latlon=False, obs_noise=40, obs_noise_ne=40, max_dist_init=400,
+                max_dist=400, min_prob_norm=0.001, non_emitting_states=True, non_emitting_length_factor=0.75,
+                max_lattice_width=None, dist_noise=40, dist_noise_ne=40, restrained_ne=True, avoid_goingback=True,
                 enable_pbar=True):
 
         """
