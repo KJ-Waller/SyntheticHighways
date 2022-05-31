@@ -248,8 +248,8 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         # If only map available, and we want to highlight removed roads
         elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is not None:
             # Get edgelists and color lists for remaining and removed roads
-            G_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'blue']
-            G_diff_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'red']
+            G_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'tab:blue']
+            G_diff_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if color == 'magenta']
             traj_colors = [(edge, color) for (edge, color) in zip(edges, edge_colors) if type(edge[0]) == str]
             G_edgelist, G_colors = zip(*G_colors)
             G_diff_edgelist, G_diff_colors = zip(*G_diff_colors)

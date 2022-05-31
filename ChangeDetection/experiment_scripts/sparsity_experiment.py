@@ -24,57 +24,62 @@ if __name__ == '__main__':
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.335, 52.36, 4.89, 4.92], type=float, help='Set bounding box to train on map')
 
-    parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
+    parser.add_argument('--seeds', nargs='+', default=[42, 142, 420], type=int, help='What random seeds to use for the experiments for reproducibility')
 
     args = parser.parse_args()
 
-    # Set seed for random libraries
-    np.random.seed(args.seed)
-    random.seed(args.seed)
+    # Run for each seed
+    for seed in args.seeds:
+        # Set seed for random libraries
+        np.random.seed(seed)
+        random.seed(seed)
 
-    # Setup dataset just to get total number of trajectories
-    dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config, split_threshold=args.split_threshold)
-    G1,T1,G2,T2 = dataset.read_snapshots(args.map_index, bbox=tuple(args.bbox))
-    total_t2 = len(T2['T'])
+        # Setup dataset just to get total number of trajectories
+        dataset = SHDataset(noise=args.noise, dataset_dir=args.dataset_dir, noise_config=args.noise_config, split_threshold=args.split_threshold)
+        G1,T1,G2,T2 = dataset.read_snapshots(args.map_index, bbox=tuple(args.bbox))
+        total_t2 = len(T2['T'])
 
-    # Get the intervals/steps for which number of trajectories to run per experiment
-    if args.max_trajectories > total_t2:
-        raise ValueError(f'--max_trajectories argument set to {args.max_trajectories}, which is larger than the total trajectories in specified bbox: {total_t2}')
-    if args.max_trajectories == 0:
-        n_traj_steps = np.linspace(0, total_t2, args.num_steps+1, dtype=np.int64)[1:]
-    else:
-        n_traj_steps = np.linspace(0, args.max_trajectories, args.num_steps+1, dtype=np.int64)[1:]
-
-    # Run experiments
-    starttime_experiments = datetime.now()
-    for i, n_traj in enumerate(n_traj_steps):
-        starttime = datetime.now()
-        print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
-        if args.noise:
-            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
-                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
-                            --split_threshold {args.split_threshold} --seed {args.seed} --noise --noise_config {args.noise_config}")
+        # Get the intervals/steps for which number of trajectories to run per experiment
+        if args.max_trajectories > total_t2:
+            raise ValueError(f'--max_trajectories argument set to {args.max_trajectories}, which is larger than the total trajectories in specified bbox: {total_t2}')
+        if args.max_trajectories == 0:
+            n_traj_steps = np.linspace(0, total_t2, args.num_steps+1, dtype=np.int64)[1:]
         else:
-            os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{args.seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{args.seed} --dataset_dir {args.dataset_dir} \
-                        --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
-                            --split_threshold {args.split_threshold} --seed {args.seed}")
-        stoptime = datetime.now()
-        delta = stoptime - starttime
-        print(f'Experiment {i+1} Finished w/ {n_traj}# of trajectories - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
+            n_traj_steps = np.linspace(0, args.max_trajectories, args.num_steps+1, dtype=np.int64)[1:]
 
-    delta = stoptime - starttime_experiments
-    print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
+        # Run experiments
+        starttime_experiments = datetime.now()
+        for i, n_traj in enumerate(n_traj_steps):
+            starttime = datetime.now()
+            print(f'Starting Experiment {i+1} w/ {n_traj}# of trajectories - Start Time: {starttime.strftime("%H:%M:%S")}')
+            if args.noise:
+                os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{seed} --dataset_dir {args.dataset_dir} \
+                            --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
+                                --split_threshold {args.split_threshold} --seed {seed} --noise --noise_config {args.noise_config}")
+            else:
+                os.system(f"python -m experiment_scripts.exp_all_methods --exp_name {args.exp_name}_seed{seed}_e#{i}_{n_traj}#_t --results_dir results_{args.exp_name}_seed{seed} --dataset_dir {args.dataset_dir} \
+                            --num_cpu_hmm {args.num_cpu_hmm} --map_index {args.map_index} --bbox {args.bbox[0]} {args.bbox[1]} {args.bbox[2]} {args.bbox[3]} --n_traj {n_traj} \
+                                --split_threshold {args.split_threshold} --seed {seed}")
+            stoptime = datetime.now()
+            delta = stoptime - starttime
+            print(f'Experiment {i+1} Finished w/ {n_traj}# of trajectories - End Time: {stoptime.strftime("%H:%M:%S")}, Duration: {str(delta)}')
 
-    # Save plots
-    x_labels = [f'{n_traj}' for n_traj in n_traj_steps]
-    x_vs_fscore(x='# of trajectories', labels=x_labels, xlabel='# of traces',
-                folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
-                savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/#traj_vs_fscore')
-    plt.close()
-    x_vs_prauc(x='# of trajectories', labels=x_labels, xlabel='# of traces',
-                folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/', 
-                savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/#traj_vs_prauc')
+        delta = stoptime - starttime_experiments
+        print(f'All experiments finished at {stoptime.strftime("%H:%M:%S")}. Total duration: {str(delta)}')
 
-    # Save GIF of how the trajectories change
-    save_gif(folder=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/',
-                img_name='G1T2', savename=f'./experimental_results/results_{args.exp_name}_seed{args.seed}/G1T2')
+        # Save plots
+        x_labels = [f'{n_traj}' for n_traj in n_traj_steps]
+        x_vs_fscore(x='# of trajectories', labels=x_labels, xlabel='# of traces',
+                    folder=f'./experimental_results/results_{args.exp_name}_seed{seed}/', 
+                    savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/#traj_vs_fscore')
+        plt.close()
+        x_vs_prauc(x='# of trajectories', labels=x_labels, xlabel='# of traces',
+                    folder=f'./experimental_results/results_{args.exp_name}_seed{seed}/', 
+                    savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/#traj_vs_prauc')
+
+        # Save GIF of how the trajectories change
+        save_gif(folder=f'./experimental_results/results_{args.exp_name}_seed{seed}/',
+                    img_name='G1T2', savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/G1T2')
+
+    # Average results from different seeds and plot in 'figures' folder
+    plot_results(folder_prefix=f'results_{args.exp_name}_seed', x='# of traces', xlabels=x_labels)

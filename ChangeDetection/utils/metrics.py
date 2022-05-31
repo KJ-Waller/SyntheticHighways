@@ -6,6 +6,7 @@ import numpy as np
 import os
 import pickle5 as pickle
 from natsort import natsorted
+import re
 
 def fscore(gt_labels, pred_labels):
     """
@@ -80,7 +81,7 @@ def PRCurve(gt_labels, pred_scores, log_scale=True, norm=False, savename=None, f
     plt.plot(r, p)
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(f'Precision-Recall Curve (AUC: {round(pr_auc, 2)})')
+    plt.title(f'Precision-Recall Curve (AUC: {round(pr_auc, 2)})', fontsize=18)
 
     # Save plot if specified
     if savename is not None:
@@ -115,7 +116,7 @@ def PRCombine(ps, rs, aucs, labels=['Random', 'Rule-based'], log_scale=True, sav
     plt.legend(labels)
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall Curve')
+    plt.title('Precision-Recall Curve', fontsize=18)
 
     # Save plot if specified
     if savename is not None:
@@ -236,7 +237,7 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(8,6)):
     plt.plot(Chs, fscores, '-o')
     plt.ylabel(y)
     plt.xlabel('Heading Weight (Ch)')
-    plt.title(f'Heading Weight vs {y}')
+    plt.title(f'Heading Weight vs {y}', fontsize=18)
     plt.ylim(0, 1)
     
     # Save figure if specified
@@ -262,7 +263,7 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     plt.plot(dims, fscores, '-o')
     plt.ylabel(y)
     plt.xlabel('Histogram Dimension')
-    plt.title(f'Histogram Dimension vs {y}')
+    plt.title(f'Histogram Dimension vs {y}', fontsize=18)
     plt.ylim(0, 1)
     
     # Save results if specified
@@ -274,14 +275,17 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     
     plt.clf()
 
-def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7)):
+def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7), preloaded_results=None):
     """
     Plots some variable vs fscore, by reading results from the given folder
     """
     plt.clf()
     
     # Read the results from the folders
-    fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
+    if folder is not None:
+        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
+    else:
+        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = preloaded_results
     
     # Initialize plot figure size and style
     plt.figure(figsize=figsize)
@@ -297,7 +301,7 @@ def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None
     plt.ylabel('F-Score')
     if xlabel is not None:
         plt.xlabel(xlabel)
-    plt.title(f'{x} vs F-Score')
+    plt.title(f'{x} vs F-Score', fontsize=18)
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
@@ -333,14 +337,17 @@ def set_plot_style():
     for tick in ax.get_yticklabels():
         tick.set_color('gray')
 
-def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7)):
+def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7), preloaded_results=None):
     """
     Plots some variable vs precision and recall AUC given folder containing results over multiple noise configurations
     """
     plt.clf()
     
     # Read the results from the folders
-    prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
+    if folder is not None:
+        prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = read_prauc_experiment(folder)
+    else:
+        prauc_random, prauc_rulebased, prauc_hist, prauc_hmm = preloaded_results
     
     # Initialize plot figure size and style
     plt.figure(figsize=figsize)
@@ -356,7 +363,7 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     plt.ylabel('PR-AUC')
     if xlabel is not None:
         plt.xlabel(xlabel)
-    plt.title(f'{x} vs PR-AUC')
+    plt.title(f'{x} vs PR-AUC', fontsize=18)
     plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
     plt.ylim(0, 1)
     
@@ -382,7 +389,7 @@ def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
     # Plot results
     plt.bar(labels, fscores)
     plt.ylabel('F-Score')
-    plt.title('Histogram Configuration vs F-Score')
+    plt.title('Histogram Configuration vs F-Score', fontsize=18)
     plt.ylim(0, 1)
     for i in range(len(labels)):
         plt.text(i-0.1,round(fscores[i],2),round(fscores[i],2))
@@ -410,7 +417,7 @@ def compare_experiments_fscore(folders=['results_high_sample', 'results_high_sam
     plt.plot(x, fscores_hmm, '-o', color='green')
 
 
-    plt.title('Noise vs F-Score')
+    plt.title('Noise vs F-Score', fontsize=18)
     plt.legend(['Random', 'Rule-based', 'HMM'])
 
     plt.ylabel('F-Score')
@@ -438,7 +445,7 @@ def compare_experiments_prauc(folders=['results_high_sample', 'results_high_samp
     plt.plot(x, praucs_hmm, '-o', color='green')
 
 
-    plt.title('Noise vs PR-AUC')
+    plt.title('Noise vs PR-AUC', fontsize=18)
     plt.legend(['Random', 'Rule-based', 'HMM'])
 
     plt.ylabel('PR-AUC')
@@ -475,4 +482,84 @@ def replot_tfreq_exps():
         else:
             replot_tfreq_results(f, steps=5, step_size=1)
 
-# replot_tfreq_exps()
+def read_results_seeds(folder_prefix):
+    results_folder = './experimental_results'
+    results_folders = os.listdir(results_folder)
+    results_folders = natsorted([os.path.join(results_folder, f) for f in results_folders if folder_prefix in f])
+
+    results = {}
+    for seed_folder in results_folders:
+        match = re.findall(r'seed([0-9]+)', seed_folder)
+        seed = int(match[0])
+        seed_folders = [f for f in os.listdir(seed_folder) if os.path.isdir(os.path.join(seed_folder, f))]
+
+        curr_seed_pickle_fnames = []
+        for f in seed_folders:
+            curr_folder = os.path.join(seed_folder, f)
+            curr_files = [os.path.join(curr_folder, f) for f in os.listdir(curr_folder) if 'hdf5' in f]
+            if len(curr_files) > 1:
+                raise ValueError(f'More than 1 pickle results file found in {curr_folder}')
+            elif len(curr_files) < 1:
+                raise ValueError(f'No pickle files found in  {curr_folder}')
+            pickle_fname = curr_files[0]
+            with open(pickle_fname, 'rb') as handle:
+                result = pickle.load(handle)
+            
+            curr_seed_pickle_fnames.append({
+                'pickle_fname': pickle_fname,
+                'results': result
+            })
+
+        results[seed] = curr_seed_pickle_fnames
+
+    return results
+
+def plot_results(folder_prefix, x, xlabels):
+    # First, collect all the results with the given folder prefix
+    results = read_results_seeds(folder_prefix)
+    
+    # Create empty numpy arrays for every method and metric for all seeds in shape (num_seeds, num_experiments)
+    results_shape = (len(results), len(results[list(results.keys())[0]]))
+    fscores_random, praucs_random = np.zeros(results_shape), np.zeros(results_shape)
+    fscores_rb, praucs_rb = np.zeros(results_shape), np.zeros(results_shape)
+    fscores_hist, praucs_hist = np.zeros(results_shape), np.zeros(results_shape)
+    fscores_hmm, praucs_hmm = np.zeros(results_shape), np.zeros(results_shape)
+    
+    # Collect prauc and fscores for each method into numpy arrays
+    for i, seed in enumerate(results.keys()):
+        res = results[seed]
+        for j, r in enumerate(res):
+            fscores_random[i,j] = r['results']['results']['random']['fscore']
+            praucs_random[i,j] = r['results']['results']['random']['pr_auc']
+            fscores_rb[i,j] = r['results']['results']['rulebased']['fscore']
+            praucs_rb[i,j] = r['results']['results']['rulebased']['pr_auc']
+            fscores_hist[i,j] = r['results']['results']['histogram']['fscore']
+            praucs_hist[i,j] = r['results']['results']['histogram']['pr_auc']
+            fscores_hmm[i,j] = r['results']['results']['hmm']['fscore']
+            praucs_hmm[i,j] = r['results']['results']['hmm']['pr_auc']
+    
+    # Take average over the seeds
+    fscores_random = np.mean(fscores_random, axis=0)
+    praucs_random = np.mean(praucs_random, axis=0)
+    fscores_rb = np.mean(fscores_rb, axis=0)
+    praucs_rb = np.mean(praucs_rb, axis=0)
+    fscores_hist = np.mean(fscores_hist, axis=0)
+    praucs_hist = np.mean(praucs_hist, axis=0)
+    fscores_hmm = np.mean(fscores_hmm, axis=0)
+    praucs_hmm = np.mean(praucs_hmm, axis=0)
+
+    # Plot the results
+    x_vs_fscore(x='Noise', labels=xlabels,
+                folder=None, 
+                savename=f'./figures/{x.lower()}_vs_fscore',
+                preloaded_results=(fscores_random, fscores_rb, fscores_hist, fscores_hmm))
+    x_vs_prauc(x='Noise', labels=xlabels,
+                folder=None, 
+                savename=f'./figures/{x.lower()}_vs_prauc',
+                preloaded_results=(praucs_random, praucs_rb, praucs_hist, praucs_hmm))
+
+# from SHDataset import measure_noise
+# noise_in_meters = measure_noise()
+# x_labels = [f"{round(noise_conf['meters'],1)}m"  for noise_conf in noise_in_meters]
+# x_labels = ['No Noise', *x_labels]
+# plot_results('results_noise_exp_seeds_test', x='Noise', xlabels=x_labels)
