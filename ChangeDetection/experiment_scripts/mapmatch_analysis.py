@@ -91,7 +91,7 @@ def save_mismatches(G1, results):
         os.mkdir(nomatch_dir)
     for i, nm in enumerate(not_matched):
         plot_graph(snapshot_to_nxgraph(G1, [nm]), zoom_on_traj=True, T_edge_width=2, T_node_size=5,
-            show_nodes=True, savename=os.path.join(nomatch_dir, f'nomatch_t_#{i}'), show_img=False)
+            show_nodes=True, savename=os.path.join(nomatch_dir, f'{args.map_matcher}_nomatch_t_#{i}'), show_img=False)
     
     # Save images of all trajectories and their paths that were mismatched to removed roads
     mismatched_dir = os.path.join(args.results_dir, 'mismatched')
@@ -115,7 +115,7 @@ def save_mismatches(G1, results):
 
         # Save image of trajectory
         plot_graph(snapshot_to_nxgraph(G1, [t]), zoom_on_traj=True, T_edge_width=3, T_node_size=8, figsize=(8,8), 
-            show_nodes=True, traj_alpha=0.25, G_edge_width=3, G_node_size=8, savename=os.path.join(mismatched_dir, f'mismatched_t_#{i}'), show_img=False)
+            show_nodes=True, traj_alpha=0.25, G_edge_width=3, G_node_size=8, savename=os.path.join(mismatched_dir, f'{args.map_matcher}_mismatched_t_#{i}'), show_img=False)
 
 if __name__ == '__main__':
 
