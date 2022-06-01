@@ -1,7 +1,7 @@
 # Experiment running on multiple seeds
 
-python -m experiment_scripts.noise_experiment --exp_name noise_exp --n_traj 0 --num_cpu_hmm 64 --seeds 42 142 420;
-python -m experiment_scripts.sparsity_experiment --exp_name sparsity_exp_max10000_wnoise --max_trajectories 10000 --noise --noise_config 1 --num_cpu_hmm 64 --seeds 42 142 420;
+# python -m experiment_scripts.noise_experiment --exp_name noise_exp --n_traj 0 --num_cpu_hmm 64 --seeds 42 142 420;
+python -m experiment_scripts.sparsity_experiment --exp_name sparsity_exp_wnoise --noise --noise_config 1 --num_cpu_hmm 64 --seeds 42 142 420;
 python -m experiment_scripts.tfreq_experiment --exp_name tfreq_exp_wnoise --n_traj 0 --noise --noise_config 1 --num_cpu_hmm 64 --seeds 42 142 420;
 
 # python -m experiment_scripts.noise_experiment --exp_name noise_exp_seeds_test --n_traj 160 --num_cpu_hmm 64 --seeds 42 142 420;

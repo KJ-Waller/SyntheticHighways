@@ -549,11 +549,11 @@ def plot_results(folder_prefix, x, xlabels, xlabel):
     praucs_hmm = np.mean(praucs_hmm, axis=0)
 
     # Plot the results
-    x_vs_fscore(x='Noise', labels=xlabels, xlabel=xlabel,
+    x_vs_fscore(x=x, labels=xlabels, xlabel=xlabel,
                 folder=None, 
                 savename=f'./figures/{x.lower()}_vs_fscore',
                 preloaded_results=(fscores_random, fscores_rb, fscores_hist, fscores_hmm))
-    x_vs_prauc(x='Noise', labels=xlabels, xlabel=xlabel,
+    x_vs_prauc(x=x, labels=xlabels, xlabel=xlabel,
                 folder=None, 
                 savename=f'./figures/{x.lower()}_vs_prauc',
                 preloaded_results=(praucs_random, praucs_rb, praucs_hist, praucs_hmm))

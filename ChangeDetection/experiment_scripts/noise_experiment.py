@@ -85,11 +85,11 @@ if __name__ == '__main__':
         x_labels = [f"{round(noise_conf['meters'],1)}m"  for noise_conf in noise_in_meters]
         x_labels = ['No Noise', *x_labels]
 
-        x_vs_fscore(x='Noise', labels=x_labels,
+        x_vs_fscore(x='Noise', labels=x_labels, xlabel='Noise',
                     folder=f'./experimental_results/results_{args.exp_name}_seed{seed}/', 
                     savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/noise_vs_fscore')
         plt.close()
-        x_vs_prauc(x='Noise', labels=x_labels,
+        x_vs_prauc(x='Noise', labels=x_labels, xlabel='Noise',
                     folder=f'./experimental_results/results_{args.exp_name}_seed{seed}/', 
                     savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/noise_vs_prauc')
 
@@ -98,4 +98,4 @@ if __name__ == '__main__':
                     img_name='G1T2', savename=f'./experimental_results/results_{args.exp_name}_seed{seed}/G1T2')
     
     # Average results from different seeds and plot in 'figures' folder
-    plot_results(folder_prefix=f'results_{args.exp_name}_seed', x='Noise', xlabels=x_labels)
+    plot_results(folder_prefix=f'results_{args.exp_name}_seed', x='Noise', xlabels=x_labels, xlabel='Noise')
