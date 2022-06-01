@@ -104,8 +104,8 @@ def save_hist(hist, savename):
 def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False, 
                 T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, 
                 removed_road_edge_width=None, use_weights=False, traj_alpha=1.0, 
-                show_img=True, fontsize=5, equal_axis_ratio=False, zoom_on_traj=False, 
-                show_legend=True, savename=None):
+                show_img=True, title=None, fontsize=5, equal_axis_ratio=False, 
+                zoom_on_traj=False, show_legend=True, savename=None):
     """
     Visualizes the NetworkX graph
 
@@ -136,6 +136,8 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         Alpha/transparency of trajectories in visualization
     show_img : boolean
         Whether to show image or not
+    title : str
+        What title to plot with the figure. None implies no title
     fontsize : float
         What fontsize to use for labels, if enabled
     equal_axis_ratio : boolean
@@ -282,6 +284,10 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
     # Make it so that the xticks and yticks are at the same interval
     if equal_axis_ratio:
         ax.axis('equal')
+
+    # Plot title if specified
+    if title is not None:
+        plt.title(title, fontsize=12)
 
     # Plot the figure (but don't show yet)
     plt.plot()
