@@ -3,3 +3,4 @@ TODOS
 * Experiments need to be run using train/test set somehow
 * Histogram method pipeline needs to be adjusted in paper
 * Make more map tiles/patches, different difficulties
+* Problem definition figure needs to be updated with new notation
