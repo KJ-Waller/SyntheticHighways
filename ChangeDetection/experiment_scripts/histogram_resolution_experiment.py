@@ -58,26 +58,26 @@ if __name__ == '__main__':
     # Get groundtruth labels
     gt_labels = groundtruth_labels(G1, G2)
 
-    # Get the different dimensions we want to run experiments for (eg 50x50, 100x100, ... , 500x500)
-    dims = np.arange(100, 1100, 100)
+    # Get the different cell resolutions we want to run experiments for
+    cell_resolutions = np.geomspace(1e-5, 1e-4, 10)
 
     # Run experiments while saving results
     results = []
-    for i, dim in enumerate(dims):
-        print(f'Running experiment {i}/{len(dims)}')
-        hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=(dim, dim),
+    for i, cellres in enumerate(cell_resolutions):
+        print(f'Running experiment {i}/{len(cell_resolutions)}')
+        hist_det = HistogramDetector(G1, tuple(args.bbox), cell_res=cellres,
                                     score_calc_method='intersect', accumulate_scores_hist=False)
         G2_pred_hist = hist_det.forward(T2['T'])
         plot_graph(G2_pred_hist, use_weights=True, figsize=(8,8), 
-                    savename=os.path.join(results_dir , f'heatmap_hist_{dim}x{dim}'), show_img=False)
+                    savename=os.path.join(results_dir , f'heatmap_hist_cellres{i}'), show_img=False)
         scores_hist = predicted_labels(G2_pred_hist)
-        p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_dir, f'prcurve_logscale_hist_{dim}x{dim}'))
-        p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_dir, f'prcurve_hist_{dim}x{dim}'), log_scale=False)
+        p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_dir, f'prcurve_logscale_hist_cellres{i}'))
+        p_hist, r_hist, ts_hist, pr_auc_hist = PRCurve(gt_labels, scores_hist, savename=os.path.join(results_dir, f'prcurve_hist_cellres{i}'), log_scale=False)
         threshold_hist = hist_det.find_threshold()
         predictions_hist = {k: 0 if scores_hist[k] < threshold_hist else 1 for k in gt_labels}
         fscore_hist = fscore(gt_labels, predictions_hist)
         
-        save_hist(hist_det.hist, savename=os.path.join(results_dir, f'hist_{dim}x{dim}'))
+        save_hist(hist_det.hist, savename=os.path.join(results_dir, f'hist_cellres{i}'))
 
         results.append({
             'scores': scores_hist,
@@ -88,14 +88,15 @@ if __name__ == '__main__':
             'threshold': threshold_hist,
             'predictions': predictions_hist,
             'fscore': fscore_hist,
-            'hist_dimensions': (dim, dim)
+            'cell_resolution': cellres
         })
 
     fscores = [res['fscore'] for res in results]
-    dimensions = [f"{res['hist_dimensions'][0]}x{res['hist_dimensions'][1]}" for res in results]
+    xlabels = [f"%.3g" % cellres for cellres in cell_resolutions]
     praucs = [res['prauc'] for res in results]
     plt.close()
-    dim_vs_y(fscores, dimensions, y='F-Score', savename=os.path.join(results_dir, f'dims_vs_fscore'))
-    dim_vs_y(praucs, dimensions, y='PR-AUC', savename=os.path.join(results_dir, f'dims_vs_prauc'))
+    dim_vs_y(fscores, xlabels, y='F-Score', savename=os.path.join(results_dir, f'cellres_vs_fscore'))
+    dim_vs_y(praucs, xlabels, y='PR-AUC', savename=os.path.join(results_dir, f'cellres_vs_prauc'))
+
     # Also save the histogram gif (of increasing dimensions)
     save_histres_gif(results_dir, savename=os.path.join(results_dir, 'histogram'))

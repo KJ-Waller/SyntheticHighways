@@ -17,7 +17,8 @@ if __name__ == '__main__':
     parser.add_argument('--noise_config', default=0, type=int, help='Which noise configuration to use')
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=0, type=int, help='Number of trajectories to sample. 0 is all')
-    parser.add_argument('--histogram_dims', nargs='+', default=[500, 500], type=int, help='What dimensions to make the histogram for the Histogram based change detector')
+    # parser.add_argument('--histogram_dims', nargs='+', default=[500, 500], type=int, help='What dimensions to make the histogram for the Histogram based change detector')
+    parser.add_argument('--histogram_cell_res', default=5e-5, type=float, help="What resolution to use for the histogram method's cell size")
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.335, 52.36, 4.89, 4.92], type=float, help='Set bounding box to train on map')
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     gt_labels = groundtruth_labels(G1, G2)
 
     # First experiment: Histogram method accumulating trajectories per cell and calculating scores by looking at all cells edges intersect
-    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims),
+    hist_det = HistogramDetector(G1, tuple(args.bbox), cell_res=args.histogram_cell_res,
                                  score_calc_method='intersect', accumulate_scores_hist=True)
     G2_pred_hist_ia = hist_det.forward(T2['T'])
     plot_graph(G2_pred_hist_ia, use_weights=True, figsize=(8,8), 
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     fscore_hist_ia = fscore(gt_labels, predictions_hist_ia)
 
     # Second experiment: Histogram method accumulating trajectories per cell and calculating scores by looking at all cells edges intersect in the center
-    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims), 
+    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=args.histogram_cell_res, 
                                 score_calc_method='center', accumulate_scores_hist=True)
     G2_pred_hist_ca = hist_det.forward(T2['T'])
     plot_graph(G2_pred_hist_ca, use_weights=True, figsize=(8,8), 
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     fscore_hist_ca = fscore(gt_labels, predictions_hist_ca)
 
     # Third experiment: Histogram method w/ trajectory occurence per cell and calculating scores by looking at all cells edges intersect
-    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims), 
+    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=args.histogram_cell_res, 
                                 score_calc_method='intersect', accumulate_scores_hist=False)
     G2_pred_hist_io = hist_det.forward(T2['T'])
     plot_graph(G2_pred_hist_io, use_weights=True, figsize=(8,8), 
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     fscore_hist_io = fscore(gt_labels, predictions_hist_io)
 
     # Fourth experiment: Histogram method w/ trajectory occurence per cell and calculating scores by looking at all cells edges intersect in the center
-    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=tuple(args.histogram_dims), 
+    hist_det = HistogramDetector(G1, tuple(args.bbox), hist_dims=args.histogram_cell_res, 
                                 score_calc_method='center', accumulate_scores_hist=False)
     G2_pred_hist_co = hist_det.forward(T2['T'])
     plot_graph(G2_pred_hist_co, use_weights=True, figsize=(8,8), 

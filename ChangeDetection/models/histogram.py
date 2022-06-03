@@ -9,7 +9,7 @@ This class implements the histogram change detector
 """
 
 class HistogramDetector(object):
-    def __init__(self, G1, bbox, hist_dims=(200,200), score_calc_method='intersect', accumulate_scores_hist=False):
+    def __init__(self, G1, bbox, cell_res=1e-5, score_calc_method='intersect', accumulate_scores_hist=False):
         
         """
         Initializes the histogram change detector
@@ -28,7 +28,7 @@ class HistogramDetector(object):
         # Initialize global variables/parameters
         self.G1 = G1.copy()
         self.bbox = bbox
-        self.hist_dims = hist_dims
+        self.cell_res = cell_res
         self.score_calc_method = score_calc_method
         self.accumulate_scores_hist = accumulate_scores_hist
     
@@ -44,7 +44,7 @@ class HistogramDetector(object):
         """
 
         # Initialize the histogram
-        self.hist, lat_bins, lon_bins = self.init_hist(self.bbox, self.hist_dims)
+        self.hist, lat_bins, lon_bins = self.init_hist(self.bbox, self.cell_res)
 
         # For every trajectory, fill in intersecting grid cells in the histogram
         for t in tqdm(T2, desc='Running Histogram Change Detector'):
@@ -63,14 +63,17 @@ class HistogramDetector(object):
         # Return predicted graph
         return self.G1
     
-    def init_hist(self, bbox, dims=(500,500)):
+    def init_hist(self, bbox, cell_res=0.0001):
         """
         Initializes an empty 2D histogram
         """
         lat_min, lat_max, lon_min, lon_max = bbox
 
-        lat_bins = np.linspace(lat_min, lat_max, num=dims[1]-1)
-        lon_bins = np.linspace(lon_min, lon_max, num=dims[0]-1)
+        lat_bins = np.arange(lat_min, lat_max, cell_res)
+        lon_bins = np.arange(lon_min, lon_max, cell_res)
+
+        # dims = (lat_bins.size, lon_bins.size)
+        dims = (lon_bins.size+1, lat_bins.size+1)
 
         hist = np.zeros(dims)
         return hist, lat_bins, lon_bins
