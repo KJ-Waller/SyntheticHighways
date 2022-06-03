@@ -2,3 +2,5 @@ TODOS
 * Change histogram method to use cell resolution (degrees/cell) rather than explicit dimensions
     * change plots accordingly
 * Make it so that HMM method uses entire G1 map and only keeps bounding box at the end
+* Experiments need to be run using train/test set somehow
+* Histogram method pipeline needs to be adjusted in paper
