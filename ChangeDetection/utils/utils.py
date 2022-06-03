@@ -287,7 +287,7 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
 
     # Plot title if specified
     if title is not None:
-        plt.title(title, fontsize=12)
+        plt.title(title, fontsize=12, fontweight='bold')
 
     # Plot the figure (but don't show yet)
     plt.plot()
