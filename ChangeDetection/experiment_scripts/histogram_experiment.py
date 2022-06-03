@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--split_threshold', default=200, type=int, help='What threshold to use when splitting up trajectories')
     parser.add_argument('--n_traj', default=0, type=int, help='Number of trajectories to sample. 0 is all')
     # parser.add_argument('--histogram_dims', nargs='+', default=[500, 500], type=int, help='What dimensions to make the histogram for the Histogram based change detector')
-    parser.add_argument('--histogram_cell_res', default=5e-5, type=float, help="What resolution to use for the histogram method's cell size")
+    parser.add_argument('--histogram_cell_res', default=5.99e-5, type=float, help="What resolution to use for the histogram method's cell size")
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
     parser.add_argument('--bbox', nargs='+', default=[52.335, 52.36, 4.89, 4.92], type=float, help='Set bounding box to train on map')

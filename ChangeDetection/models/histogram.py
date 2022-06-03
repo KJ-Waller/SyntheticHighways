@@ -9,7 +9,7 @@ This class implements the histogram change detector
 """
 
 class HistogramDetector(object):
-    def __init__(self, G1, bbox, cell_res=1e-5, score_calc_method='intersect', accumulate_scores_hist=False):
+    def __init__(self, G1, bbox, cell_res=5.99e-5, score_calc_method='intersect', accumulate_scores_hist=False):
         
         """
         Initializes the histogram change detector
