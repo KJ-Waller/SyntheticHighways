@@ -98,6 +98,18 @@ def combine_graphs(G1,G2):
     G = nx.compose(G1,G2)
     return G
 
+def plot_hist(hist, figsize=(8,8), savename=None):
+    """
+    Plots (and saves, if specified) the histogram from the Histogram method
+    """
+    plt.figure(figsize=figsize)
+    plt.imshow(np.rot90(hist), interpolation='nearest', aspect=1.2)
+
+    # Save figure if savename is specified
+    if savename is not None:
+        fig1 = plt.gcf()
+        fig1.savefig(f'{savename}.png', bbox_inches = "tight")
+
 def save_hist(hist, savename):
     plt.imsave(f'{savename}.png', np.rot90(hist))
 
@@ -208,12 +220,12 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         if len(traj_weights) != 0 and len(map_weights) != 0:
             edges_map, eweights_map = zip(*map_weights)
             edges_traj, eweights_traj = zip(*traj_weights)
-            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=eweights_map, edge_cmap=plt.cm.viridis, ax=ax)
+            nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=eweights_map, edge_cmap=plt.cm.autumn_r, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=eweights_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
         # If only map available, plot in blue only
         elif len(traj_weights) == 0 and len(map_weights) != 0:
-            sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = np.min(edge_weights), vmax=np.max(edge_weights)))
-            nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.viridis, ax=ax)
+            sm = plt.cm.ScalarMappable(cmap=plt.cm.autumn_r, norm=plt.Normalize(vmin = np.min(edge_weights), vmax=np.max(edge_weights)))
+            nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_weights, edge_cmap=plt.cm.autumn_r, ax=ax)
             plt.colorbar(sm)
 
         # if only trajectories available, plot in red
