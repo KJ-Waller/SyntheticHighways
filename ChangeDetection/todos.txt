@@ -1,6 +1,5 @@
 TODOS
 * Make it so that HMM method uses entire G1 map and only keeps bounding box at the end
 * Experiments need to be run using train/test set somehow
-* Histogram method pipeline needs to be adjusted in paper
 * Make more map tiles/patches, different difficulties
-* Problem definition figure needs to be updated with new notation
+* More in-depth evaluation in ablation studies
