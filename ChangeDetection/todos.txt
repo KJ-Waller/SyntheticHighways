@@ -3,3 +3,4 @@ TODOS
 * Experiments need to be run using train/test set somehow
 * Make more map tiles/patches, different difficulties
 * More in-depth evaluation in ablation studies
+* Note in paper over what seeds we run experiments
