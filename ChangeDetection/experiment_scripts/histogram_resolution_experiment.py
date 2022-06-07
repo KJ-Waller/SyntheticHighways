@@ -59,7 +59,7 @@ if __name__ == '__main__':
     gt_labels = groundtruth_labels(G1, G2)
 
     # Get the different cell resolutions we want to run experiments for
-    cell_resolutions = np.geomspace(1e-5, 1e-4, 10)
+    cell_resolutions = np.geomspace(1e-5, 1e-3, 10)
 
     # Run experiments while saving results
     results = []

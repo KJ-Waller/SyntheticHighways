@@ -130,13 +130,18 @@ class HistogramDetector(object):
             edge_score = []
             for (lon, lat) in points:
                 edge_score.append(hist[lon][lat])
-
-                edge_score.append(hist[lon-1][lat])
-                edge_score.append(hist[lon][lat-1])
-                edge_score.append(hist[lon+1][lat])
-                edge_score.append(hist[lon][lat+1])
-                edge_score.append(hist[lon+1][lat+1])
-                edge_score.append(hist[lon-1][lat-1])
+                if lon-1 >= 0:
+                    edge_score.append(hist[lon-1][lat])
+                if lat-1 >= 0:
+                    edge_score.append(hist[lon][lat-1])
+                if lon+1 < hist.shape[0]:
+                    edge_score.append(hist[lon+1][lat])
+                if lat+1 < hist.shape[1]:
+                    edge_score.append(hist[lon][lat+1])
+                if lon+1 < hist.shape[0] and lat+1 < hist.shape[1]:
+                    edge_score.append(hist[lon+1][lat+1])
+                if lon-1 >= 0 and lat-1 >= 0:
+                    edge_score.append(hist[lon-1][lat-1])
             
             if len(edge_score) == 0:
                 edge_score = 0
