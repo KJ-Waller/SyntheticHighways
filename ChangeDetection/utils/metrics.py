@@ -275,45 +275,6 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
     
     plt.clf()
 
-def x_vs_fscore(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7), preloaded_results=None):
-    """
-    Plots some variable vs fscore, by reading results from the given folder
-    """
-    plt.clf()
-    
-    # Read the results from the folders
-    if folder is not None:
-        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
-    else:
-        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = preloaded_results
-    
-    # Initialize plot figure size and style
-    plt.figure(figsize=figsize)
-    set_plot_style()
-
-    # Plot the 4 different methods
-    plt.plot(labels, fscores_random, '-o')
-    plt.plot(labels, fscores_rulebased, '-o')
-    plt.plot(labels, fscores_hist, '-o')
-    plt.plot(labels, fscores_hmm, '-o')
-    
-    # Set axes labels, title, legend and y limit
-    plt.ylabel('F-Score')
-    if xlabel is not None:
-        plt.xlabel(xlabel)
-    plt.title(f'{x} vs F-Score', fontsize=18)
-    plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
-    plt.ylim(0, 1)
-    
-    # Save figure if specified
-    if savename is not None:
-        plt.gcf()
-        plt.savefig(f'{savename}.png',bbox_inches='tight')
-    else:
-        plt.show()
-
-    plt.clf()
-
 def set_plot_style():
     # use a gray background
     ax = plt.axes(facecolor='#E6E6E6')
@@ -337,7 +298,59 @@ def set_plot_style():
     for tick in ax.get_yticklabels():
         tick.set_color('gray')
 
-def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None, figsize=(10,7), preloaded_results=None):
+
+def x_vs_fscore(x, labels, stds=None, xlabel=None, folder='./dummy_results/', 
+                savename=None, figsize=(10,7), preloaded_results=None):
+    """
+    Plots some variable vs fscore, by reading results from the given folder
+    """
+    plt.clf()
+    
+    # Read the results from the folders
+    if folder is not None:
+        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = read_fscores_experiment(folder)
+    else:
+        fscores_random, fscores_rulebased, fscores_hist, fscores_hmm = preloaded_results
+    
+    # Initialize plot figure size and style
+    plt.figure(figsize=figsize)
+    set_plot_style()
+
+    # Plot the 4 different methods
+    plt.plot(labels, fscores_random, '-o')
+    plt.plot(labels, fscores_rulebased, '-o')
+    plt.plot(labels, fscores_hmm, '-o')
+    plt.plot(labels, fscores_hist, '-o')
+
+    # Plot the standard deviation if enabled
+    if stds is not None:
+        fscores_random_std, fscores_rulebased_std, fscores_hist_std, fscores_hmm_std = stds
+        # ax = plt.gca()
+        print(fscores_rulebased_std)
+        plt.fill_between(labels, fscores_random - fscores_random_std, fscores_random + fscores_random_std, alpha=0.2)
+        plt.fill_between(labels, fscores_rulebased - fscores_rulebased_std, fscores_rulebased + fscores_rulebased_std, alpha=0.2)
+        plt.fill_between(labels, fscores_hmm - fscores_hmm_std, fscores_hmm + fscores_hmm_std, alpha=0.2)
+        plt.fill_between(labels, fscores_hist - fscores_hist_std, fscores_hist + fscores_hist_std, alpha=0.2)
+    
+    # Set axes labels, title, legend and y limit
+    plt.ylabel('F-Score')
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+    plt.title(f'{x} vs F-Score', fontsize=18)
+    plt.legend(['Random', 'Rule-based', 'HMM', 'Histogram'])
+    plt.ylim(0, 1)
+    
+    # Save figure if specified
+    if savename is not None:
+        plt.gcf()
+        plt.savefig(f'{savename}.png',bbox_inches='tight')
+    else:
+        plt.show()
+
+    plt.clf()
+
+def x_vs_prauc(x, labels, stds=None, xlabel=None, folder='./dummy_results/',
+                savename=None, figsize=(10,7), preloaded_results=None):
     """
     Plots some variable vs precision and recall AUC given folder containing results over multiple noise configurations
     """
@@ -356,15 +369,25 @@ def x_vs_prauc(x, labels, xlabel=None, folder='./dummy_results/', savename=None,
     # Plot the 4 different methods
     plt.plot(labels, prauc_random, '-o')
     plt.plot(labels, prauc_rulebased, '-o')
-    plt.plot(labels, prauc_hist, '-o')
     plt.plot(labels, prauc_hmm, '-o')
+    plt.plot(labels, prauc_hist, '-o')
+
+    # Plot the standard deviation if enabled
+    if stds is not None:
+        prauc_random_std, prauc_rulebased_std, prauc_hist_std, prauc_hmm_std = stds
+        # ax = plt.gca()
+        print(prauc_rulebased_std)
+        plt.fill_between(labels, prauc_random - prauc_random_std, prauc_random + prauc_random_std, alpha=0.2)
+        plt.fill_between(labels, prauc_rulebased - prauc_rulebased_std, prauc_rulebased + prauc_rulebased_std, alpha=0.2)
+        plt.fill_between(labels, prauc_hmm - prauc_hmm_std, prauc_hmm + prauc_hmm_std, alpha=0.2)
+        plt.fill_between(labels, prauc_hist - prauc_hist_std, prauc_hist + prauc_hist_std, alpha=0.2)
 
     # Set axes labels, title, legend and y limit
     plt.ylabel('PR-AUC')
     if xlabel is not None:
         plt.xlabel(xlabel)
     plt.title(f'{x} vs PR-AUC', fontsize=18)
-    plt.legend(['Random', 'Rule-based', 'Histogram', 'HMM'])
+    plt.legend(['Random', 'Rule-based', 'HMM', 'Histogram'])
     plt.ylim(0, 1)
     
     # Save figure if specified
@@ -482,8 +505,7 @@ def replot_tfreq_exps():
         else:
             replot_tfreq_results(f, steps=5, step_size=1)
 
-def read_results_seeds(folder_prefix):
-    results_folder = './experimental_results'
+def read_results_seeds(folder_prefix, results_folder='./experimental_results'):
     results_folders = os.listdir(results_folder)
     results_folders = natsorted([os.path.join(results_folder, f) for f in results_folders if folder_prefix in f])
 
@@ -514,9 +536,9 @@ def read_results_seeds(folder_prefix):
 
     return results
 
-def plot_results(folder_prefix, x, xlabels, xlabel):
+def plot_results(folder_prefix, x, xlabels, xlabel, results_folder='./experimental_results'):
     # First, collect all the results with the given folder prefix
-    results = read_results_seeds(folder_prefix)
+    results = read_results_seeds(folder_prefix, results_folder)
     
     # Create empty numpy arrays for every method and metric for all seeds in shape (num_seeds, num_experiments)
     results_shape = (len(results), len(results[list(results.keys())[0]]))
@@ -539,24 +561,36 @@ def plot_results(folder_prefix, x, xlabels, xlabel):
             praucs_hmm[i,j] = r['results']['results']['hmm']['pr_auc']
     
     # Take average over the seeds
-    fscores_random = np.mean(fscores_random, axis=0)
-    praucs_random = np.mean(praucs_random, axis=0)
-    fscores_rb = np.mean(fscores_rb, axis=0)
-    praucs_rb = np.mean(praucs_rb, axis=0)
-    fscores_hist = np.mean(fscores_hist, axis=0)
-    praucs_hist = np.mean(praucs_hist, axis=0)
-    fscores_hmm = np.mean(fscores_hmm, axis=0)
-    praucs_hmm = np.mean(praucs_hmm, axis=0)
+    fscores_random_mean = np.mean(fscores_random, axis=0)
+    praucs_random_mean = np.mean(praucs_random, axis=0)
+    fscores_rb_mean = np.mean(fscores_rb, axis=0)
+    praucs_rb_mean = np.mean(praucs_rb, axis=0)
+    fscores_hist_mean = np.mean(fscores_hist, axis=0)
+    praucs_hist_mean = np.mean(praucs_hist, axis=0)
+    fscores_hmm_mean = np.mean(fscores_hmm, axis=0)
+    praucs_hmm_mean = np.mean(praucs_hmm, axis=0)
+
+    # Take standard deviations over the seeds
+    fscores_random_std = np.std(fscores_random, axis=0)
+    praucs_random_std = np.std(praucs_random, axis=0)
+    fscores_rb_std = np.std(fscores_rb, axis=0)
+    praucs_rb_std = np.std(praucs_rb, axis=0)
+    fscores_hist_std = np.std(fscores_hist, axis=0)
+    praucs_hist_std = np.std(praucs_hist, axis=0)
+    fscores_hmm_std = np.std(fscores_hmm, axis=0)
+    praucs_hmm_std = np.std(praucs_hmm, axis=0)
 
     # Plot the results
     x_vs_fscore(x=x, labels=xlabels, xlabel=xlabel,
                 folder=None, 
                 savename=f'./figures/{x.lower()}_vs_fscore',
-                preloaded_results=(fscores_random, fscores_rb, fscores_hist, fscores_hmm))
+                preloaded_results=(fscores_random_mean, fscores_rb_mean, fscores_hist_mean, fscores_hmm_mean),
+                stds=(fscores_random_std, fscores_rb_std, fscores_hist_std, fscores_hmm_std))
     x_vs_prauc(x=x, labels=xlabels, xlabel=xlabel,
                 folder=None, 
                 savename=f'./figures/{x.lower()}_vs_prauc',
-                preloaded_results=(praucs_random, praucs_rb, praucs_hist, praucs_hmm))
+                preloaded_results=(praucs_random_mean, praucs_rb_mean, praucs_hist_mean, praucs_hmm_mean),
+                stds=(praucs_random_std, praucs_rb_std, praucs_hist_std, praucs_hmm_std))
 
 # from SHDataset import measure_noise
 # noise_in_meters = measure_noise()
