@@ -252,7 +252,7 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
                 elif len(green_edges) > 0 and len(orange_edges) == 0:
                     plt.legend(handles=[map_line, traj_line, map_removed_road_line, path_line])
                 else:
-                    plt.legend(handles=[map_line, traj_line, map_removed_road_line])
+                    plt.legend(handles=[map_line, traj_line])
         # If only map available, and we don't want to highlight removed roads, plot in blue only
         elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is None:
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
