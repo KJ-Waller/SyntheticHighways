@@ -132,22 +132,23 @@ class SHDataset(object):
                     print(f'Writing snapshots to pickle file: {cleaned_fname}')
                     pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
             
-            # Add noise to trajectories for current configuration, if noise is selected/enabled
-            if self.noise:
-                cleaned_fname_noise = os.path.join(self.cleandata_dir, f'{map_name}_cleaned_noise_config{noise_config+1}.hdf5')
-                if not os.path.isfile(cleaned_fname_noise):
-                    self.maps[i]['cleaned_data'] = cleaned_fname
-                    G1,T1,G2,T2 = self.read_snapshots(i)
-                    T1['T'] = self.add_noise_parallel(T1['T'])
-                    T2['T'] = self.add_noise_parallel(T2['T'])
+            self.maps[i]['cleaned_data'] = cleaned_fname
+            # # Add noise to trajectories for current configuration, if noise is selected/enabled
+            # if self.noise:
+            #     cleaned_fname_noise = os.path.join(self.cleandata_dir, f'{map_name}_cleaned_noise_config{noise_config+1}.hdf5')
+            #     if not os.path.isfile(cleaned_fname_noise):
+            #         self.maps[i]['cleaned_data'] = cleaned_fname
+            #         G1,T1,G2,T2 = self.read_snapshots(i)
+            #         T1['T'] = self.add_noise_parallel(T1['T'])
+            #         T2['T'] = self.add_noise_parallel(T2['T'])
 
-                    with open(cleaned_fname_noise, 'wb') as handle:
-                        print(f'Writing snapshots to pickle file: {cleaned_fname_noise}')
-                        pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
+            #         with open(cleaned_fname_noise, 'wb') as handle:
+            #             print(f'Writing snapshots to pickle file: {cleaned_fname_noise}')
+            #             pickle.dump((G1,T1,G2,T2), handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-                self.maps[i]['cleaned_data'] = cleaned_fname_noise
-            else:
-                self.maps[i]['cleaned_data'] = cleaned_fname
+            #     self.maps[i]['cleaned_data'] = cleaned_fname_noise
+            # else:
+            #     self.maps[i]['cleaned_data'] = cleaned_fname
 
     def organize_xml_filenames(self):
         # Read raw data XML filenames
@@ -217,6 +218,10 @@ class SHDataset(object):
         if self.resample_timedp:
             T1['T'] = self.resample_timedpoints(T1['T'])
             T2['T'] = self.resample_timedpoints(T2['T'])
+
+        if self.noise:
+            T1['T'] = self.add_noise_parallel(T1['T'])
+            T2['T'] = self.add_noise_parallel(T2['T'])
 
         return G1,T1,G2,T2
 

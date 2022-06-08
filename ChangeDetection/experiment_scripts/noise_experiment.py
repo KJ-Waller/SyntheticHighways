@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Run for each seed
+    # Run for every seed
     for seed in args.seeds:
         # Set seed for random libraries
         np.random.seed(seed)
