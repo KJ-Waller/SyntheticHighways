@@ -386,9 +386,11 @@ def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0000):
                 t_new.append(p)
             else:
                 if len(t_new) > 0:
+                    t_new = np.stack(t_new, axis=0)
                     T1_new.append(t_new)
                 t_new = []
         if len(t_new) > 0:
+            t_new = np.stack(t_new, axis=0)
             T1_new.append(t_new)
 
     # Do the same for T2
@@ -400,9 +402,11 @@ def filter_bbox_snapshots(G1,T1,G2,T2, bbox, map_offset=0.0000):
                 t_new.append(p)
             else:
                 if len(t_new) > 0:
+                    t_new = np.stack(t_new, axis=0)
                     T2_new.append(t_new)
                 t_new = []
         if len(t_new) > 0:
+            t_new = np.stack(t_new, axis=0)
             T2_new.append(t_new)
 
     
