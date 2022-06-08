@@ -1,4 +1,3 @@
 TODOS
-* Experiments need to be run using train/test set somehow
-* Make more map tiles/patches, different difficulties
-* Make sure rule-based mentions the error of using lat lon when computing the distance as mentioned in the algorithm
+* Split up related works and preliminary works, find more papers to include etc.
+* Rerun experiments with fill-between, and having noise being recalculated every time 
