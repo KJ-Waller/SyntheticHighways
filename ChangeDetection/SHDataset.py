@@ -600,7 +600,9 @@ class SHDataset(object):
     def resample_timedpoints(self, T):
         new_T = []
         for t in T:
-            new_T.append(t[0:-1:self.resample_everyn])
+            new_t = t[0:-1:self.resample_everyn]
+            if len(new_t) > self.min_traj_len:
+                new_T.append(new_t)
         return new_T
 
         
