@@ -9,7 +9,7 @@ This class implements the histogram change detector
 """
 
 class HistogramDetector(object):
-    def __init__(self, G1, bbox, cell_res=5.99e-5, score_calc_method='intersect', accumulate_scores_hist=False):
+    def __init__(self, G1, bbox, cell_res=7.74e-5, score_calc_method='intersect', accumulate_scores_hist=False):
         
         """
         Initializes the histogram change detector
@@ -174,3 +174,24 @@ class HistogramDetector(object):
         else:
             threshold = possible_thresholds[0][0]
         return threshold
+
+    def draw_map_hist(self, bbox=None):
+        # Initialize the map histogram
+        bbox = self.bbox if bbox is None else bbox
+        map_hist, lat_bins, lon_bins = self.init_hist(bbox, self.cell_res)
+
+        # For every edge in the map, draw the points
+        for edge in self.G1.edges(data=True):
+            edge = [
+                {
+                    'lat': edge[2]['endpoints']['lat1'],
+                    'lon': edge[2]['endpoints']['lon1']
+                },
+                {
+                    'lat': edge[2]['endpoints']['lat2'],
+                    'lon': edge[2]['endpoints']['lon2']
+                }
+            ]
+            map_hist = self.edge_to_hist(edge, map_hist, lat_bins, lon_bins)
+
+        return map_hist
