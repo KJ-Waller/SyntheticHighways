@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--histogram_cell_res', default=5.99e-5, type=float, help="What resolution to use for the histogram method's cell size")
 
     parser.add_argument('--map_index', default=0, type=int, help='Index for which map to run experiment')
-    parser.add_argument('--bbox', nargs='+', default=[52.34, 52.35, 4.89, 4.93], type=float, help='Set bounding box to train on map')
+    parser.add_argument('--bbox', nargs='+', default=[52.34, 52.35, 4.895, 4.93], type=float, help='Set bounding box to train on map')
     parser.add_argument('--seed', default=42, type=int, help="What random seed to use for experiments for reproducibility")
 
     args = parser.parse_args()

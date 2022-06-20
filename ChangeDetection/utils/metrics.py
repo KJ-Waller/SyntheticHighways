@@ -411,6 +411,7 @@ def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
     
     # Plot results
     plt.bar(labels, fscores)
+    plt.xlabel('Histogram Configuration')
     plt.ylabel('F-Score')
     plt.title('Histogram Configuration vs F-Score', fontsize=18)
     plt.ylim(0, 1)
