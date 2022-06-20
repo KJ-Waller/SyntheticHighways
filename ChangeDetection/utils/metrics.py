@@ -235,8 +235,8 @@ def Ch_vs_y(fscores, Chs, y='F-Score', savename=None, figsize=(8,6)):
 
     # Plot results
     plt.plot(Chs, fscores, '-o')
-    plt.ylabel(y)
-    plt.xlabel('Heading Weight (Ch)')
+    plt.ylabel(y, fontsize=14)
+    plt.xlabel('Heading Weight (Ch)', fontsize=14)
     plt.title(f'Heading Weight vs {y}', fontsize=18)
     plt.ylim(0, 1)
     
@@ -261,8 +261,8 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
 
     # Plot results
     plt.plot(dims, fscores, '-o')
-    plt.ylabel(y)
-    plt.xlabel('Histogram Cell Resolution')
+    plt.ylabel(y, fontsize=14)
+    plt.xlabel('Histogram Cell Resolution', fontsize=14)
     plt.title(f'Histogram Cell Resolution vs {y}', fontsize=18)
     plt.ylim(0, 1)
     
