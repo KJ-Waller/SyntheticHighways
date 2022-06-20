@@ -415,7 +415,7 @@ def bar_fscore(fscores, labels, savename=None, figsize=(8,6)):
     plt.title('Histogram Configuration vs F-Score', fontsize=18)
     plt.ylim(0, 1)
     for i in range(len(labels)):
-        plt.text(i-0.1,round(fscores[i],2),round(fscores[i],2))
+        plt.text(i-0.1,round(fscores[i]-0.03,2),round(fscores[i],2))
 
     # Save results if specified
     if savename is not None:
