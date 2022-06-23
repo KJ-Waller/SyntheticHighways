@@ -261,9 +261,9 @@ def dim_vs_y(fscores, dims, y='F-Score', savename=None, figsize=(10,7)):
 
     # Plot results
     plt.plot(dims, fscores, '-o')
-    plt.ylabel(y, fontsize=14)
-    plt.xlabel('Histogram Cell Resolution', fontsize=14)
-    plt.title(f'Histogram Cell Resolution vs {y}', fontsize=18)
+    plt.ylabel(y, fontsize=16)
+    plt.xlabel('Histogram Cell Resolution', fontsize=16)
+    plt.title(f'Histogram Cell Resolution vs {y}', fontsize=20)
     plt.ylim(0, 1)
     
     # Save results if specified
