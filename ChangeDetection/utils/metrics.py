@@ -325,18 +325,18 @@ def x_vs_fscore(x, labels, stds=None, xlabel=None, folder='./dummy_results/',
     # Plot the standard deviation if enabled
     if stds is not None:
         fscores_random_std, fscores_rulebased_std, fscores_hist_std, fscores_hmm_std = stds
-        # ax = plt.gca()
-        print(fscores_rulebased_std)
         plt.fill_between(labels, fscores_random - fscores_random_std, fscores_random + fscores_random_std, alpha=0.2)
         plt.fill_between(labels, fscores_rulebased - fscores_rulebased_std, fscores_rulebased + fscores_rulebased_std, alpha=0.2)
         plt.fill_between(labels, fscores_hmm - fscores_hmm_std, fscores_hmm + fscores_hmm_std, alpha=0.2)
         plt.fill_between(labels, fscores_hist - fscores_hist_std, fscores_hist + fscores_hist_std, alpha=0.2)
     
     # Set axes labels, title, legend and y limit
-    plt.ylabel('F-Score')
+    plt.ylabel('F-Score', fontsize=18)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     if xlabel is not None:
-        plt.xlabel(xlabel)
-    plt.title(f'{x} vs F-Score', fontsize=18)
+        plt.xlabel(xlabel, fontsize=18)
+    plt.title(f'{x} vs F-Score', fontsize=20)
     plt.legend(['Random', 'Rule-based', 'HMM', 'Histogram'])
     plt.ylim(0, 1)
     
@@ -375,18 +375,18 @@ def x_vs_prauc(x, labels, stds=None, xlabel=None, folder='./dummy_results/',
     # Plot the standard deviation if enabled
     if stds is not None:
         prauc_random_std, prauc_rulebased_std, prauc_hist_std, prauc_hmm_std = stds
-        # ax = plt.gca()
-        print(prauc_rulebased_std)
         plt.fill_between(labels, prauc_random - prauc_random_std, prauc_random + prauc_random_std, alpha=0.2)
         plt.fill_between(labels, prauc_rulebased - prauc_rulebased_std, prauc_rulebased + prauc_rulebased_std, alpha=0.2)
         plt.fill_between(labels, prauc_hmm - prauc_hmm_std, prauc_hmm + prauc_hmm_std, alpha=0.2)
         plt.fill_between(labels, prauc_hist - prauc_hist_std, prauc_hist + prauc_hist_std, alpha=0.2)
 
     # Set axes labels, title, legend and y limit
-    plt.ylabel('PR-AUC')
+    plt.ylabel('PR-AUC', fontsize=18)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     if xlabel is not None:
-        plt.xlabel(xlabel)
-    plt.title(f'{x} vs PR-AUC', fontsize=18)
+        plt.xlabel(xlabel, fontsize=18)
+    plt.title(f'{x} vs PR-AUC', fontsize=20)
     plt.legend(['Random', 'Rule-based', 'HMM', 'Histogram'])
     plt.ylim(0, 1)
     
