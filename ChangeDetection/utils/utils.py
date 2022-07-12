@@ -113,7 +113,7 @@ def plot_hist(hist, figsize=(8,8), savename=None):
 def save_hist(hist, savename):
     plt.imsave(f'{savename}.png', np.rot90(hist))
 
-def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False, 
+def plot_graph(G, figsize=(8,8), show_nodes=False, hide_T_nodes=False, show_labels=False, 
                 T_node_size=5, G_node_size=5, T_edge_width=1.0, G_edge_width=1.0, 
                 removed_road_edge_width=None, use_weights=False, traj_alpha=1.0, 
                 show_img=True, title=None, fontsize=5, equal_axis_ratio=False, 
@@ -130,6 +130,8 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
         What size to plot the figure
     show_nodes : boolean
         Whether to show nodes of trajectories and map or not
+    hide_T_nodes : boolean
+        Whether to hide the nodes of trajectories when show nodes is enabled.
     show_labels : boolean
         Whether to show node ids or not
     T_node_size : float
@@ -175,8 +177,8 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
                           markersize=G_node_size, linewidth=G_edge_width, label='Map')
     map_removed_road_line = mlines.Line2D([], [], color='magenta', marker='',
                           markersize=G_node_size, linewidth=removed_road_edge_width, label='Removed Edge')
-    traj_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes else '',
-                          markersize=T_node_size, linewidth=T_edge_width, alpha=traj_alpha, label='Trajectory')
+    traj_line = mlines.Line2D([], [], color='red', marker='.' if show_nodes and not hide_T_nodes else '',
+                          markersize=T_node_size, linewidth=T_edge_width, label='Trajectory')
     mismatched_line = mlines.Line2D([], [], color='orange', marker='',
                           markersize=G_node_size, linewidth=T_edge_width, label='Mismatched Edge')
     path_line = mlines.Line2D([], [], color='green', marker='',
@@ -200,9 +202,22 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, show_labels=False,
     
     # Plot the nodes if enabled
     if show_nodes:
-        nodecols = nx.get_node_attributes(G, 'color')
-        node_sizes = [T_node_size if nodecols[node] == 'red' else G_node_size for node in nodes]
-        nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_sizes, ax=ax)
+
+        # Only show map if hide_T_nodes is set to True
+        if hide_T_nodes:
+            nodecols = nx.get_node_attributes(G, 'color')
+            nodes_G = [node for node in G.nodes if nodecols[node] != 'red']
+            node_sizes = [G_node_size for node in nodes_G]
+            node_pos_G = {nodeid: nodecoords for nodeid, nodecoords in node_pos.items() if nodeid in nodes_G}
+            node_colors_G = [col for col in node_colors if col != 'red']
+            nx.draw_networkx_nodes(G, node_pos_G, nodelist=nodes_G, node_color=node_colors_G, node_size=node_sizes, ax=ax)
+        else:
+            # Get list of node sizes for the trajectories
+            nodecols = nx.get_node_attributes(G, 'color')
+            node_sizes = [T_node_size if nodecols[node] == 'red' else G_node_size for node in nodes]
+
+            nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_sizes, ax=ax)
+
     if show_labels:
         node_labels = {node: str(node) for node in G.nodes}
         nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=fontsize, ax=ax)
