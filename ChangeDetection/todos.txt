@@ -1,3 +1,0 @@
-TODOS
-* Split up related works and preliminary works, find more papers to include etc.
-* Rerun experiments with fill-between, and having noise being recalculated every time 
