@@ -186,9 +186,11 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, hide_T_nodes=False, show_labe
     
     # Get list of green and orange edges (representing path and mismatched edges)
     # for checking if path and mismatched edges are to be plotted
+    # Magenta edges are removed roads
     e_colors = nx.get_edge_attributes(G, name='color')
     green_edges = [col for col in e_colors.values() if col == 'green']
     orange_edges = [col for col in e_colors.values() if col == 'orange']
+    magenta_edges = [col for col in e_colors.values() if col == 'magenta']
     
     # Fetch the node positions and colors
     node_lats = nx.get_node_attributes(G, 'lat')
@@ -262,12 +264,15 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, hide_T_nodes=False, show_labe
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_map, width=G_edge_width, edge_color=colors_map, edge_cmap=plt.cm.Blues, ax=ax)
             nx.draw_networkx_edges(G, node_pos, edgelist=edges_traj, width=T_edge_width, edge_color=colors_traj, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
             if show_legend:
-                if len(green_edges) > 0 and len(orange_edges) > 0:
-                    plt.legend(handles=[map_line, traj_line, map_removed_road_line, path_line, mismatched_line])
-                elif len(green_edges) > 0 and len(orange_edges) == 0:
-                    plt.legend(handles=[map_line, traj_line, map_removed_road_line, path_line])
-                else:
-                    plt.legend(handles=[map_line, traj_line])
+                handles = [map_line, traj_line]
+                if len(green_edges) > 0:
+                    handles.append(path_line)
+                if len(orange_edges) > 0:
+                    handles.append(mismatched_line)
+                if len(magenta_edges) > 0:
+                    handles.append(map_removed_road_line)
+
+                plt.legend(handles=handles)
         # If only map available, and we don't want to highlight removed roads, plot in blue only
         elif len(traj_colors) == 0 and len(map_colors) != 0 and removed_road_edge_width is None:
             nx.draw_networkx_edges(G, node_pos, width=G_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Blues, ax=ax)
