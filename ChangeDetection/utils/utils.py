@@ -219,10 +219,6 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, hide_T_nodes=False, show_labe
             node_sizes = [T_node_size if nodecols[node] == 'red' else G_node_size for node in nodes]
 
             nx.draw_networkx_nodes(G, node_pos, nodelist=nodes, node_color=node_colors, node_size=node_sizes, ax=ax)
-
-    if show_labels:
-        node_labels = {node: str(node) for node in G.nodes}
-        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=fontsize, ax=ax)
         
     # Plot edges using weights if enabled
     if use_weights:
@@ -300,6 +296,11 @@ def plot_graph(G, figsize=(8,8), show_nodes=False, hide_T_nodes=False, show_labe
             nx.draw_networkx_edges(G, node_pos, width=T_edge_width, edge_color=edge_colors, edge_cmap=plt.cm.Reds, alpha=traj_alpha, ax=ax)
             if show_legend:
                 plt.legend(handles=[traj_line])
+
+    # Show node labels if enabled
+    if show_labels:
+        node_labels = {node: str(node) for node in G.nodes}
+        nx.draw_networkx_labels(G, node_pos, labels=node_labels, font_size=fontsize, ax=ax)
 
     # Add axis labels for lat lon
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
